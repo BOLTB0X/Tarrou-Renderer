@@ -47,6 +47,7 @@
     self.metalView.depthStencilPixelFormat = MTLPixelFormatDepth32Float;
     self.metalView.enableSetNeedsDisplay = NO;
     self.metalView.paused = NO;
+    self.metalView.clearDepth = 0.0;
 
     self.app = [[Application alloc] initWithMetalKitView:self.metalView];
     self.metalView.delegate = self.app;

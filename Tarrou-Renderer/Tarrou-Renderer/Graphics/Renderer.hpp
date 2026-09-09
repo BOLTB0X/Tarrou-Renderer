@@ -9,6 +9,7 @@
 #define Renderer_hpp
 
 #include <memory>
+#include "MeshData.hpp"
 
 class Camera;
 
@@ -41,6 +42,10 @@ private:
     ClearColor              m_clearColor;
     void*                   m_device;
     std::unique_ptr<Camera> m_Camera;
+    
+    Mesh                    m_mesh;
+    void*                   m_pipelineState = nullptr; // 렌더 파이프라인
+    void*                   m_depthState = nullptr;    // 뎁스 스텐실
 }; // Renderer
 
 #endif /* Renderer_hpp */
