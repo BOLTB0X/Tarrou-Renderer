@@ -38,8 +38,8 @@ Camera::Camera() : m_position(DEFAULT_POSITION), m_rotation(DEFAULT_ROTATION),
     m_right = simd_make_float3(1.0f, 0.0f, 0.0f);
     m_upVector = simd_make_float3(0.0f, 1.0f, 0.0f);
     
-    m_rotationSpeed = 0.5f;
-    m_moveSpeed = 10.0f;
+    m_rotationSpeed = 0.05f;
+    m_moveSpeed = 1.0f;
     m_zoomSpeed = 1.0f;
 } // Camera
 
@@ -148,12 +148,12 @@ void Camera::OnGUI() {
     ImGui::Separator();
 
     float pos[3] = { m_position.x, m_position.y, m_position.z };
-    if (ImGui::DragFloat3("Position", pos, 0.1f)) {
+    if (ImGui::SliderFloat3("Position", pos, -100.0f, 100.0f, "%.2f")) {
         SetPosition(pos[0], pos[1], pos[2]);
     }
 
     float rot[3] = { m_rotation.x, m_rotation.y, m_rotation.z };
-    if (ImGui::DragFloat3("Rotation", rot, 0.5f, -360.0f, 360.0f)) {
+    if (ImGui::SliderFloat3("Rotation", rot, -360.0f, 360.0f, "%.1f deg")) {
         SetRotation(rot[0], rot[1], rot[2]);
     }
 
@@ -167,11 +167,23 @@ void Camera::OnGUI() {
     ImGui::Text("Near: %.2f / Far: %.2f", GetNear(), GetFar());
 
     ImGui::Separator();
-    ImGui::Text("Camera Speeds");
+    ImGui::Text("Camera Speeds & Ranges");
 
-    ImGui::DragFloat("Move Speed", &m_moveSpeed, 0.1f, 0.01f, 100.0f, "%.2f");
-    ImGui::DragFloat("Rotation Speed", &m_rotationSpeed, 0.001f, 0.001f, 5.0f, "%.3f");
-    ImGui::DragFloat("Zoom Speed", &m_zoomSpeed, 0.1f, 0.01f, 50.0f, "%.2f");
+    static float moveSpeedMin = 0.01f;
+    static float moveSpeedMax = 100.0f;
+    ImGui::SliderFloat("Move Speed", &m_moveSpeed, moveSpeedMin, moveSpeedMax, "%.2f");
+
+    ImGui::Spacing();
+
+    static float rotSpeedMin = 0.001f;
+    static float rotSpeedMax = 5.0f;
+    ImGui::SliderFloat("Rotation Speed", &m_rotationSpeed, rotSpeedMin, rotSpeedMax, "%.3f");
+
+    ImGui::Spacing();
+
+    static float zoomSpeedMin = 0.01f;
+    static float zoomSpeedMax = 50.0f;
+    ImGui::SliderFloat("Zoom Speed", &m_zoomSpeed, zoomSpeedMin, zoomSpeedMax, "%.2f");
 
     Update();
 } // OnGUI
