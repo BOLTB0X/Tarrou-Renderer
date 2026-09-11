@@ -11,8 +11,6 @@
 #include "ModelLoader.hpp"
 #include "RendererBridge.h"
 
-using namespace GlobalVariables;
-
 Renderer::Renderer() {
     m_clearColor = ClearColor();
     m_device = nullptr;
@@ -28,27 +26,39 @@ bool Renderer::Init(void* metalDevice, float width, float height) {
     if (!m_device) return false;
     
     Camera::InitParam camParam;
-    camParam.fov = DEFAULT_FOV;
+    camParam.fov = GlobalVariables::DEFAULT_FOV;
     camParam.aspect = (height > 0.0f) ? (width / height) : (16.0f / 9.0f);;
-    camParam.screenNear = SCREEN_NEAR;
-    camParam.screenFar = SCREEN_DEPTH;
+    camParam.screenNear = GlobalVariables::SCREEN_NEAR;
+    camParam.screenFar = GlobalVariables::SCREEN_DEPTH;
     m_Camera->Init(camParam);
 
     // 1. 모델 로드
-    std::string modelPath = "/Users/b0x/Documents/GitHub/Tarrou-Renderer/Tarrou-Renderer/Assets/buddha.obj";
+    std::string modelPath = GlobalVariables::GetAssetPath(GlobalVariables::MODEL_RELATIVE_PATH);
+
     if (!ModelLoader::LoadOBJ(modelPath, m_device, m_mesh)) {
         return false;
     }
 
         // 2. 파이프라인 및 뎁스 상태 초기화
-    if (!RendererBridge_InitPipeline(m_device, &m_pipelineState, &m_depthState)) {
+    if (!RendererBridge_InitPipeline(m_device,
+                                     GlobalVariables::DEFAULT_BUDDHA_SHADER_VERTEX,
+                                     GlobalVariables::DEFAULT_BUDDHA_SHADER_FRAGMENT,
+                                     &m_pipelineState, &m_depthState)) {
         return false;
     }
     return true;
 } // Init
 
-void Renderer::Update(float deltaTime) {
-
+void Renderer::Update(const UpdateParam& param) {
+    Camera::FrameParam camParam;
+    camParam.moveForward = param.moveForward;
+    camParam.moveRight = param.moveRight;
+    camParam.moveUp = param.moveUp;
+    camParam.rotationDeltaX = param.rotationDeltaX;
+    camParam.rotationDeltaY = param.rotationDeltaY;
+    camParam.zoomDelta = param.zoomDelta;
+    
+    m_Camera->Frame(camParam);
 } // Update
 
 void Renderer::Render(void* renderCommandEncoder) {

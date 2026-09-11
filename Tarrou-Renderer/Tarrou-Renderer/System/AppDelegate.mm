@@ -8,6 +8,7 @@
 #import "AppDelegate.h"
 #import "MetalView.h"
 #import "Application.h"
+#import "GlobalVariables.hpp"
 
 @interface AppDelegate ()
 
@@ -20,15 +21,15 @@
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
-    const NSRect frame = NSMakeRect(0, 0, 1280, 720);
+    const NSRect frame = NSMakeRect(0, 0, GlobalVariables::SCREEN_WIDTH, GlobalVariables::SCREEN_HEIGHT);
 
     self.window = [[NSWindow alloc] initWithContentRect:frame
-                                               styleMask:(NSWindowStyleMaskTitled |
-                                                           NSWindowStyleMaskClosable |
-                                                           NSWindowStyleMaskResizable |
-                                                           NSWindowStyleMaskMiniaturizable)
-                                                 backing:NSBackingStoreBuffered
-                                                   defer:NO];
+                                              styleMask:(NSWindowStyleMaskTitled |
+                                                         NSWindowStyleMaskClosable |
+                                                         NSWindowStyleMaskResizable |
+                                                         NSWindowStyleMaskMiniaturizable)
+                                                backing:NSBackingStoreBuffered
+                                                defer:NO];
     self.window.title = @"Tarrou Renderer";
     [self.window center];
 

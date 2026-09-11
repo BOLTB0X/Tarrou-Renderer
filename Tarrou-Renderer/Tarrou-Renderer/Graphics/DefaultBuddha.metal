@@ -22,7 +22,7 @@ struct VertexOut {
     float3 normal;
 }; // VertexOut
 
-vertex VertexOut vertex_main(const device VertexIn* vertex_array [[buffer(0)]],
+vertex VertexOut DefaultBuddhaVS(const device VertexIn* vertex_array [[buffer(0)]],
                              constant CameraUniforms& cam [[buffer(1)]],
                              uint vid [[vertex_id]])
 {
@@ -33,11 +33,11 @@ vertex VertexOut vertex_main(const device VertexIn* vertex_array [[buffer(0)]],
     out.normal = vertex_array[vid].normal;
     
     return out;
-} // vertex_main
+} // DefaultBuddhaVS
 
-fragment float4 fragment_main(VertexOut in [[stage_in]])
+fragment float4 DefaultBuddhaPS(VertexOut in [[stage_in]])
 {
     float3 norm = normalize(in.normal);
     float light = saturate(dot(norm, float3(0.5, 0.8, -0.2)));
     return float4(float3(light) * float3(0.8, 0.7, 0.6), 1.0);
-} // fragment_main
+} // DefaultBuddhaPS

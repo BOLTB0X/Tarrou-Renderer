@@ -73,12 +73,41 @@
 } // drawableSizeWillChange
 
 - (void)drawInMTKView:(MTKView *)view {
-    // 프레임 타이머 및 C++ Renderer 로직 갱신
     [_base tick];
-    _renderer->Update(static_cast<float>(_base.deltaTime));
+    float dt = static_cast<float>(_base.deltaTime);
 
     MTLRenderPassDescriptor *descriptor = view.currentRenderPassDescriptor;
     if (!descriptor) { return; }
+
+    ImGui_ImplMetal_NewFrame(descriptor);
+    ImGui_ImplOSX_NewFrame(view);
+    ImGui::NewFrame();
+
+    Renderer::UpdateParam updateParam = {};
+    updateParam.deltaTime = dt;
+    
+    ImGuiIO& io = ImGui::GetIO();
+    
+    if (!io.WantCaptureMouse) {
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Right) || ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            ImVec2 delta = ImGui::GetIO().MouseDelta;
+            updateParam.rotationDeltaX = delta.x;
+            updateParam.rotationDeltaY = delta.y;
+        }
+        updateParam.zoomDelta = io.MouseWheel;
+    }
+    
+    if (!io.WantCaptureKeyboard) {
+        if (ImGui::IsKeyDown(ImGuiKey_W)) updateParam.moveForward += dt;
+        if (ImGui::IsKeyDown(ImGuiKey_S)) updateParam.moveForward -= dt;
+        if (ImGui::IsKeyDown(ImGuiKey_D)) updateParam.moveRight += dt;
+        if (ImGui::IsKeyDown(ImGuiKey_A)) updateParam.moveRight -= dt;
+        if (ImGui::IsKeyDown(ImGuiKey_E)) updateParam.moveUp += dt;
+        if (ImGui::IsKeyDown(ImGuiKey_Q)) updateParam.moveUp -= dt;
+    }
+    
+    // 렌더러에 업데이트 파라미터 전달
+    _renderer->Update(updateParam);
 
     const Renderer::ClearColor &cc = _renderer->GetClearColor();
     descriptor.colorAttachments[0].clearColor = MTLClearColorMake(cc.r, cc.g, cc.b, cc.a);
@@ -86,13 +115,7 @@
     id<MTLCommandBuffer> commandBuffer = [self.commandQueue commandBuffer];
     commandBuffer.label = @"TarrouRendererCommandBuffer";
 
-    // ImGui 프레임
-    ImGui_ImplMetal_NewFrame(descriptor);
-    ImGui_ImplOSX_NewFrame(view);
-    ImGui::NewFrame();
-
     [self buildUI];
-
     ImGui::Render();
 
     id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:descriptor];
@@ -101,7 +124,7 @@
     // 3D 그래픽스 렌더링
     _renderer->Render((__bridge void*)encoder);
 
-    // ImGui UI 오버레이 렌더링 (3D 파이프라인 위에 그리기)
+    // ImGui UI 오버레이 렌더링
     ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, encoder);
 
     [encoder endEncoding];
@@ -111,7 +134,7 @@
         [commandBuffer presentDrawable:drawable];
     }
     [commandBuffer commit];
-} // drawInMTKView
+}
 
 - (void)buildUI {
     ImGui::Begin("Tarrou Renderer");

@@ -8,52 +8,68 @@
 #import <Metal/Metal.h>
 #import "RendererBridge.h"
 #import "MeshData.hpp"
+#import "GlobalVariables.hpp"
 
-extern "C" bool RendererBridge_InitPipeline(void* devicePtr, void** outPipelineState, void** outDepthState) {
+using namespace GlobalVariables;
+
+extern "C" bool RendererBridge_InitPipeline(void*       devicePtr,
+                                            const char* vertexFunctionName,
+                                            const char* fragmentFunctionName,
+                                            void**      outPipelineState,
+                                            void**      outDepthState) {
     @autoreleasepool {
         id<MTLDevice> device = (__bridge id<MTLDevice>)devicePtr;
-        if (!device) return false;
-
+        if (!device || !vertexFunctionName || !fragmentFunctionName) return false;
+ 
         // Depth Stencil State 생성
         MTLDepthStencilDescriptor *depthDesc = [[MTLDepthStencilDescriptor alloc] init];
         depthDesc.depthCompareFunction = MTLCompareFunctionGreaterEqual;
         depthDesc.depthWriteEnabled = YES;
         id<MTLDepthStencilState> depthState = [device newDepthStencilStateWithDescriptor:depthDesc];
-        
-        // C++에서 보관할 수 있도록 Retain 처리하여 void*로 넘김
+ 
         *outDepthState = (void*)CFBridgingRetain(depthState);
 
-        // 기본 Shader Library 로드
         id<MTLLibrary> defaultLibrary = [device newDefaultLibrary];
         if (!defaultLibrary) {
             NSLog(@"[RendererBridge] Default shader library not found!");
             return false;
         }
-
-        id<MTLFunction> vertexFunc = [defaultLibrary newFunctionWithName:@"vertex_main"];
-        id<MTLFunction> fragmentFunc = [defaultLibrary newFunctionWithName:@"fragment_main"];
-
+ 
+        NSString *vertexName = [NSString stringWithUTF8String:vertexFunctionName];
+        NSString *fragmentName = [NSString stringWithUTF8String:fragmentFunctionName];
+ 
+        id<MTLFunction> vertexFunc = [defaultLibrary newFunctionWithName:vertexName];
+        id<MTLFunction> fragmentFunc = [defaultLibrary newFunctionWithName:fragmentName];
+ 
+        if (!vertexFunc || !fragmentFunc) {
+            NSLog(@"[RendererBridge] 함수를 찾지 못함: vertex=%@ fragment=%@", vertexName, fragmentName);
+            return false;
+        }
+ 
         // Render Pipeline State 생성
         MTLRenderPipelineDescriptor *pipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
         pipelineDesc.vertexFunction = vertexFunc;
         pipelineDesc.fragmentFunction = fragmentFunc;
         pipelineDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
-        pipelineDesc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float; // 뎁스 포맷
-
+        pipelineDesc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+ 
         NSError* error = nil;
         id<MTLRenderPipelineState> pipelineState = [device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
         if (!pipelineState) {
             NSLog(@"[RendererBridge] Pipeline creation error: %@", error);
             return false;
         }
-
+ 
         *outPipelineState = (void*)CFBridgingRetain(pipelineState);
         return true;
     }
 } // RendererBridge_InitPipeline
 
-extern "C" void RendererBridge_DrawMesh(void* encoderPtr, void* pipelineStatePtr, void* depthStatePtr,
-                                        const void* meshPtr, simd_float4x4 viewProjMatrix) {
+extern "C" void RendererBridge_DrawMesh(void*         encoderPtr,
+                                        void*         pipelineStatePtr,
+                                        void*         depthStatePtr,
+                                        const void*   meshPtr,
+                                        simd_float4x4 viewProjMatrix) {
     id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)encoderPtr;
     id<MTLRenderPipelineState> pipelineState = (__bridge id<MTLRenderPipelineState>)pipelineStatePtr;
     id<MTLDepthStencilState> depthState = (__bridge id<MTLDepthStencilState>)depthStatePtr;
@@ -66,7 +82,6 @@ extern "C" void RendererBridge_DrawMesh(void* encoderPtr, void* pipelineStatePtr
         [encoder setDepthStencilState:depthState];
     }
 
-    // 카메라의 View-Projection 행렬을 버퍼 인덱스 1번으로 바인딩
     [encoder setVertexBytes:&viewProjMatrix length:sizeof(simd_float4x4) atIndex:1];
 
     for (const auto& part : mesh->parts) {

@@ -16,21 +16,28 @@ class Camera;
 class Renderer {
 public:
     struct ClearColor {
-        float r;
-        float g;
-        float b;
-        float a;
-        
-        ClearColor() : r(0.05f), g(0.05f), b(0.08f), a(1.0f) {}
-        ClearColor(float _r, float _g, float _b, float _a) : r(_r), g(_g), b(_b), a(_a) {}
+        float r = 0.05f;
+        float g = 0.05f;
+        float b = 0.08f;
+        float a = 1;
     }; // ClearColor
+    
+    struct UpdateParam {
+        float deltaTime = 0;
+        float moveForward = 0;
+        float moveRight = 0;
+        float moveUp = 0;
+        float rotationDeltaX = 0;
+        float rotationDeltaY = 0;
+        float zoomDelta = 0;
+    }; // UpdateParam
     
 public:
     Renderer();
     ~Renderer();
 
     bool Init(void*, float, float);
-    void Update(float);
+    void Update(const UpdateParam&);
     void Render(void*);
     void OnResize(float, float);
     void OnGUI();
