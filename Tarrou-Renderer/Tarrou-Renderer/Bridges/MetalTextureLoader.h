@@ -18,5 +18,4 @@ struct NativeTexture {
 class MetalTextureLoader {
 public:
     static NativeTexture Load(void* device, const std::string& path);
-    static void ReleaseTexture(void* texture); // ReleaseTexture
 }; // MetalTextureLoader

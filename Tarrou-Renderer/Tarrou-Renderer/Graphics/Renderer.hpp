@@ -9,9 +9,11 @@
 #define Renderer_hpp
 
 #include <memory>
-#include "MeshData.hpp"
+#include "MetalResource.h"
 
 class Camera;
+class Ground;
+class Buddha;
 
 class Renderer {
 public:
@@ -21,7 +23,7 @@ public:
         float b = 0.08f;
         float a = 1;
     }; // ClearColor
-    
+
     struct UpdateParam {
         float deltaTime = 0;
         float moveForward = 0;
@@ -31,7 +33,7 @@ public:
         float rotationDeltaY = 0;
         float zoomDelta = 0;
     }; // UpdateParam
-    
+
 public:
     Renderer();
     ~Renderer();
@@ -41,7 +43,7 @@ public:
     void Render(void*);
     void OnResize(float, float);
     void OnGUI();
-    
+
     ClearColor& GetClearColor();
     void        SetClearColor(float, float, float, float);
 
@@ -49,10 +51,10 @@ private:
     ClearColor              m_clearColor;
     void*                   m_device;
     std::unique_ptr<Camera> m_Camera;
-    
-    Mesh                    m_mesh;
-    void*                   m_pipelineState = nullptr; // 렌더 파이프라인
-    void*                   m_depthState = nullptr;    // 뎁스 스텐실
+    std::unique_ptr<Buddha> m_Buddha;
+    std::unique_ptr<Ground> m_Ground;
+    MetalResource           m_depthState;
+
 }; // Renderer
 
 #endif /* Renderer_hpp */

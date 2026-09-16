@@ -8,68 +8,67 @@
 #import <Metal/Metal.h>
 #import "RendererBridge.h"
 #import "MeshData.hpp"
-#import "GlobalVariables.hpp"
 
-using namespace GlobalVariables;
+extern "C" void* RendererBridge_CreateDepthState(void* devicePtr) {
+    @autoreleasepool {
+        id<MTLDevice> device = (__bridge id<MTLDevice>)devicePtr;
+        if (!device) return nullptr;
 
-extern "C" bool RendererBridge_InitPipeline(void*       devicePtr,
-                                            const char* vertexFunctionName,
-                                            const char* fragmentFunctionName,
-                                            void**      outPipelineState,
-                                            void**      outDepthState) {
+        MTLDepthStencilDescriptor *depthDesc = [[MTLDepthStencilDescriptor alloc] init];
+        depthDesc.depthCompareFunction = MTLCompareFunctionGreaterEqual; // Reverse-Z
+        depthDesc.depthWriteEnabled = YES;
+        id<MTLDepthStencilState> depthState = [device newDepthStencilStateWithDescriptor:depthDesc];
+        if (!depthState) return nullptr;
+
+        return (void*)CFBridgingRetain(depthState);
+    }
+} // RendererBridge_CreateDepthState
+
+extern "C" bool RendererBridge_InitPipeline(void* devicePtr,
+                                             const char* vertexFunctionName,
+                                             const char* fragmentFunctionName,
+                                             void** outPipelineState) {
     @autoreleasepool {
         id<MTLDevice> device = (__bridge id<MTLDevice>)devicePtr;
         if (!device || !vertexFunctionName || !fragmentFunctionName) return false;
- 
-        // Depth Stencil State 생성
-        MTLDepthStencilDescriptor *depthDesc = [[MTLDepthStencilDescriptor alloc] init];
-        depthDesc.depthCompareFunction = MTLCompareFunctionGreaterEqual;
-        depthDesc.depthWriteEnabled = YES;
-        id<MTLDepthStencilState> depthState = [device newDepthStencilStateWithDescriptor:depthDesc];
- 
-        *outDepthState = (void*)CFBridgingRetain(depthState);
 
         id<MTLLibrary> defaultLibrary = [device newDefaultLibrary];
         if (!defaultLibrary) {
             NSLog(@"[RendererBridge] Default shader library not found!");
             return false;
         }
- 
+
         NSString *vertexName = [NSString stringWithUTF8String:vertexFunctionName];
         NSString *fragmentName = [NSString stringWithUTF8String:fragmentFunctionName];
- 
+
         id<MTLFunction> vertexFunc = [defaultLibrary newFunctionWithName:vertexName];
         id<MTLFunction> fragmentFunc = [defaultLibrary newFunctionWithName:fragmentName];
- 
+
         if (!vertexFunc || !fragmentFunc) {
             NSLog(@"[RendererBridge] 함수를 찾지 못함: vertex=%@ fragment=%@", vertexName, fragmentName);
             return false;
         }
- 
-        // Render Pipeline State 생성
+
         MTLRenderPipelineDescriptor *pipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
         pipelineDesc.vertexFunction = vertexFunc;
         pipelineDesc.fragmentFunction = fragmentFunc;
         pipelineDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
         pipelineDesc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
- 
+
         NSError* error = nil;
         id<MTLRenderPipelineState> pipelineState = [device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
         if (!pipelineState) {
             NSLog(@"[RendererBridge] Pipeline creation error: %@", error);
             return false;
         }
- 
+
         *outPipelineState = (void*)CFBridgingRetain(pipelineState);
         return true;
     }
 } // RendererBridge_InitPipeline
 
-extern "C" void RendererBridge_DrawMesh(void*         encoderPtr,
-                                        void*         pipelineStatePtr,
-                                        void*         depthStatePtr,
-                                        const void*   meshPtr,
-                                        simd_float4x4 viewProjMatrix) {
+extern "C" void RendererBridge_DrawMesh(void* encoderPtr, void* pipelineStatePtr, void* depthStatePtr,
+                                        const void* meshPtr, simd_float4x4 viewProjMatrix) {
     id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)encoderPtr;
     id<MTLRenderPipelineState> pipelineState = (__bridge id<MTLRenderPipelineState>)pipelineStatePtr;
     id<MTLDepthStencilState> depthState = (__bridge id<MTLDepthStencilState>)depthStatePtr;
@@ -85,11 +84,11 @@ extern "C" void RendererBridge_DrawMesh(void*         encoderPtr,
     [encoder setVertexBytes:&viewProjMatrix length:sizeof(simd_float4x4) atIndex:1];
 
     for (const auto& part : mesh->parts) {
-        id<MTLBuffer> vertexBuffer = (__bridge id<MTLBuffer>)part.vertexBuffer;
+        id<MTLBuffer> vertexBuffer = (__bridge id<MTLBuffer>)part.vertexBuffer.Get();
         [encoder setVertexBuffer:vertexBuffer offset:0 atIndex:0];
 
         for (const auto& subMesh : part.subMeshes) {
-            id<MTLBuffer> indexBuffer = (__bridge id<MTLBuffer>)subMesh.indexBuffer;
+            id<MTLBuffer> indexBuffer = (__bridge id<MTLBuffer>)subMesh.indexBuffer.Get();
             MTLIndexType indexType = (subMesh.indexTypeBytes == 4) ? MTLIndexTypeUInt32 : MTLIndexTypeUInt16;
 
             [encoder drawIndexedPrimitives:(MTLPrimitiveType)subMesh.primitiveType
@@ -99,4 +98,5 @@ extern "C" void RendererBridge_DrawMesh(void*         encoderPtr,
                          indexBufferOffset:0];
         } // for (const auto& subMesh : part.subMeshes)
     } // for (const auto& part : mesh->parts)
+    
 } // RendererBridge_DrawMesh

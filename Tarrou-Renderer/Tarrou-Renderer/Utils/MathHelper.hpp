@@ -59,4 +59,10 @@ namespace MathHelper {
 
         return simd_matrix(col0, col1, col2, col3);
     } // MatrixPerspectiveFovLH
+
+    inline simd_float4x4 MakeTranslationMatrix(simd_float3 t) {
+        simd_float4x4 m = matrix_identity_float4x4;
+        m.columns[3] = simd_make_float4(t.x, t.y, t.z, 1.0f);
+        return m;
+    } // MakeTranslationMatrix
 } // MathHelper

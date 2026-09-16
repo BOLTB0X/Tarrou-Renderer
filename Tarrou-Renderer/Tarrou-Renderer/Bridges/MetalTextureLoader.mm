@@ -8,7 +8,6 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
-
 #include "MetalTextureLoader.h"
 
 NativeTexture MetalTextureLoader::Load(void* device, const std::string& path) {
@@ -25,13 +24,12 @@ NativeTexture MetalTextureLoader::Load(void* device, const std::string& path) {
 
     if (nsPath == nil) {
         NSLog(@"[Tarrou] Invalid texture path: %s", path.c_str());
-
         return result;
     }
 
     NSURL* url = [NSURL fileURLWithPath:nsPath];
 
-    MTKTextureLoader* loader = [[MTKTextureLoader alloc]initWithDevice:metalDevice];
+    MTKTextureLoader* loader = [[MTKTextureLoader alloc] initWithDevice:metalDevice];
     NSError* error = nil;
 
     NSDictionary* options =
@@ -42,31 +40,17 @@ NativeTexture MetalTextureLoader::Load(void* device, const std::string& path) {
 
     id<MTLTexture> texture = [loader newTextureWithContentsOfURL:url
                                                          options:options
-                                                         error:&error];
+                                                           error:&error];
 
     if (texture == nil) {
-        NSLog(
-            @"[Tarrou] Failed to load texture: %@",
-            error.localizedDescription
-        );
-
+        NSLog(@"[Tarrou] Failed to load texture: %@", error.localizedDescription);
         return result;
     }
 
-    result.texture = (__bridge_retained void*)texture;
+    result.texture = (__bridge_retained void*)texture; // MetalResource::Adopt가 소유권을 넘겨받음
     result.width = static_cast<uint32_t>(texture.width);
     result.height = static_cast<uint32_t>(texture.height);
     result.mipLevels = static_cast<uint32_t>(texture.mipmapLevelCount);
 
     return result;
 } // Load
-
-void MetalTextureLoader::ReleaseTexture(void* texture) {
-    if (texture == nullptr) {
-        return;
-    }
-
-    id<MTLTexture> metalTexture = (__bridge_transfer id<MTLTexture>)texture;
-
-    metalTexture = nil;
-} // ReleaseTexture

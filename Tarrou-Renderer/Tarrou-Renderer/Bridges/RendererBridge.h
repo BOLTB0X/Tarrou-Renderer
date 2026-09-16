@@ -15,7 +15,8 @@
 extern "C" {
 #endif
 
-bool RendererBridge_InitPipeline(void*, const char*, const char*, void**, void**);
+void* RendererBridge_CreateDepthState(void*);
+bool RendererBridge_InitPipeline(void*, const char*, const char*, void**);
 void RendererBridge_DrawMesh(void*, void*, void*, const void*, simd_float4x4);
 
 #ifdef __cplusplus

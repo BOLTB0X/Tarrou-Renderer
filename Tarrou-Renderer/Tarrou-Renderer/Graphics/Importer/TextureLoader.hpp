@@ -15,7 +15,7 @@ class Texture;
 
 class TextureLoader {
 public:
-    explicit TextureLoader(void*);
+    explicit                 TextureLoader(void*);
     std::shared_ptr<Texture> Load(const std::string&);
 
 private:
