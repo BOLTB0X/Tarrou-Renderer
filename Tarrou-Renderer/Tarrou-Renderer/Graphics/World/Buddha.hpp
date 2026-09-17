@@ -9,8 +9,11 @@
 #define Buddha_hpp
 
 #include <simd/simd.h>
+#include <vector>
 #include "MeshData.hpp"
 #include "MetalResource.h"
+
+class Meshlet;
 
 class Buddha {
 public:
@@ -27,9 +30,10 @@ public:
     simd_float3 GetPosition() const;
 
 private:
-    Mesh          m_mesh;
-    MetalResource m_pipelineState;
-    simd_float3   m_position = { 0.0f, 0.0f, 0.0f };
+    Mesh                     m_mesh;
+    std::unique_ptr<Meshlet> m_meshletData;
+    MetalResource            m_pipelineState;
+    simd_float3              m_position = { 0.0f, 0.0f, 0.0f };
 }; // Buddha
 
 #endif /* Buddha_hpp */

@@ -16,8 +16,12 @@ extern "C" {
 #endif
 
 void* RendererBridge_CreateDepthState(void*);
-bool RendererBridge_InitPipeline(void*, const char*, const char*, void**);
-void RendererBridge_DrawMesh(void*, void*, void*, const void*, simd_float4x4);
+bool  RendererBridge_InitPipeline(void*, const char*, const char*, void**);
+bool  RendererBridge_InitMeshPipeline(void*, const char*, const char*, void**);
+void  RendererBridge_DrawMesh(void*, void*, void*, const void*, simd_float4x4);
+void  RendererBridge_DrawMeshlets(void*, void*, void*, void*,void*, void*, void*, size_t, simd_float4x4);
+void* RendererBridge_GetBufferContents(void*);
+void* RendererBridge_CreateBuffer(void*, const void*, size_t);
 
 #ifdef __cplusplus
 }

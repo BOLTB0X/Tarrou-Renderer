@@ -14,14 +14,14 @@
 #include "MetalResource.h"
  
 struct MeshSubmesh {
-    MetalResource indexBuffer;             // id<MTLBuffer>, 소유
+    MetalResource indexBuffer;
     uint32_t      indexCount = 0;
-    uint32_t      indexTypeBytes = 2;      // 2=uint16, 4=uint32
-    uint32_t      primitiveType = 3;       // MTLPrimitiveTypeTriangle = 3
+    uint32_t      indexTypeBytes = 2;
+    uint32_t      primitiveType = 3;
 }; // MeshSubmesh
  
 struct MeshPart {
-    MetalResource             vertexBuffer;   // id<MTLBuffer>, 소유
+    MetalResource             vertexBuffer;
     uint32_t                  vertexStride = 0;
     uint32_t                  vertexCount = 0;
     std::vector<MeshSubmesh>  subMeshes;
@@ -30,5 +30,7 @@ struct MeshPart {
 struct Mesh {
     std::vector<MeshPart> parts;
 }; // Mesh
+
+
 
 #endif // !MESHDATA_hpp

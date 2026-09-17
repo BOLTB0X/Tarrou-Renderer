@@ -29,6 +29,9 @@ namespace GlobalVariables {
     static constexpr const char* DEFAULT_BUDDHA_SHADER_VERTEX   = "DefaultBuddhaVS";
     static constexpr const char* DEFAULT_BUDDHA_SHADER_FRAGMENT = "DefaultBuddhaPS";
 
+    static constexpr const char* MESH_SHADER_MESH   = "BuddhaMeshMS";
+    static constexpr const char* MESH_SHADER_FRAGMENT = "BuddhaMeshPS";
+
     static constexpr const char* GROUND_TEXTURE_RELATIVE_PATH = "Assets/ground.png";
     static constexpr const char* GROUND_SHADER_VERTEX         = "GroundVS";
     static constexpr const char* GROUND_SHADER_FRAGMENT       = "GroundPS";
