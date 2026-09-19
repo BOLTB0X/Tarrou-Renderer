@@ -7,8 +7,10 @@
 
 #include "Ground.hpp"
 #include "GlobalVariables.hpp"
+#include "RendererBridge.h"
 #include "GroundBridge.h"
 #include "TextureLoader.hpp"
+#include "ShaderLoader.hpp"
 #include "Texture.hpp"
 
 using namespace GlobalVariables;
@@ -21,7 +23,7 @@ Ground::~Ground() {
 
 bool Ground::Init(void* device) {
     TextureLoader loader(device);
-    m_texture = loader.Load(GetAssetPath(GROUND_TEXTURE_RELATIVE_PATH));
+    m_texture = loader.Load(GetRootPath(GROUND_TEXTURE_RELATIVE_PATH));
     if (!m_texture) {
         return false;
     }
@@ -41,11 +43,13 @@ bool Ground::Init(void* device) {
 
     void* rawPipelineState = nullptr;
     void* rawSamplerState  = nullptr;
-    if (!GroundBridge_InitPipeline(device,
-                                    GROUND_SHADER_VERTEX,
-                                    GROUND_SHADER_FRAGMENT,
-                                    &rawPipelineState,
-                                    &rawSamplerState)) {
+    
+    std::string shaderFilePath = GetRootPath(GROUND_SHADER);
+    std::string baseDirPath    = GetRootPath(BASE_PATH);
+    std::string groundSource = ShaderLoader::Load(shaderFilePath, baseDirPath);
+    if (!GroundBridge_InitPipeline(device, groundSource.c_str(),
+                                   GROUND_SHADER_VERTEX, GROUND_SHADER_FRAGMENT,
+                                   &rawPipelineState, &rawSamplerState)) {
         return false;
     }
     m_pipelineState = MetalResource::Adopt(rawPipelineState);
@@ -64,7 +68,7 @@ bool Ground::Init(void* device) {
     return true;
 } // Init
 
-void Ground::Render(void* renderCommandEncoder, void* depthState, simd_float4x4 viewProjMatrix) {
+void Ground::Render(void* renderCommandEncoder, void* depthState) {
     if (!m_pipelineState || !m_vertexBuffer || !m_texture) return;
 
     GroundBridge_Draw(
@@ -74,9 +78,7 @@ void Ground::Render(void* renderCommandEncoder, void* depthState, simd_float4x4 
         m_vertexBuffer.Get(),
         static_cast<unsigned int>(m_vertices.size()),
         m_texture->GetNativeTexture(),
-        m_samplerState.Get(),
-        viewProjMatrix
-    );
+        m_samplerState.Get());
 } // Render
 
 float Ground::GetHeight() const {

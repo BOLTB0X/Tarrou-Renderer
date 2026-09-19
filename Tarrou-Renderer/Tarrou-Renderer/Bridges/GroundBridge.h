@@ -17,14 +17,13 @@ extern "C" {
  
 // 파이프라인 + 샘플러 상태 생성 (한 번만 호출)
 bool GroundBridge_InitPipeline(void*       devicePtr,
+                               const char* shaderSourceRaw,
                                const char* vertexFunctionName,
                                const char* fragmentFunctionName,
                                void**      outPipelineState,
                                void**      outSamplerState);
  
-void* GroundBridge_CreateVertexBuffer(void*         devicePtr,
-                                      const void*   vertexData,
-                                      unsigned long byteLength);
+void* GroundBridge_CreateVertexBuffer(void*,const void*,unsigned long);
  
 void GroundBridge_Draw(void*         encoderPtr,
                        void*         pipelineStatePtr,
@@ -32,8 +31,7 @@ void GroundBridge_Draw(void*         encoderPtr,
                        void*         vertexBufferPtr,
                        unsigned int  vertexCount,
                        void*         texturePtr,
-                       void*         samplerStatePtr,
-                       simd_float4x4 viewProjMatrix);
+                       void*         samplerStatePtr);
  
 #ifdef __cplusplus
 }

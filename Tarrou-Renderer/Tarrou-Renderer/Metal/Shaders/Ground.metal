@@ -6,11 +6,9 @@
 //
 
 #include <metal_stdlib>
-using namespace metal;
+#include "ShaderCommon.metal"
 
-struct GroundCameraUniforms {
-    float4x4 viewProjectionMatrix;
-}; // GroundCameraUniforms
+using namespace metal;
 
 struct GroundVertexIn {
     packed_float3 position;
@@ -19,18 +17,19 @@ struct GroundVertexIn {
 
 struct GroundVertexOut {
     float4 position [[position]];
+    float3 worldPosition;
     float2 uv;
 }; // GroundVertexOut
 
-vertex GroundVertexOut GroundVS(const device GroundVertexIn*   vertex_array [[buffer(0)]],
-                                constant GroundCameraUniforms& cam [[buffer(1)]],
-                                uint                           vid [[vertex_id]]) {
+vertex GroundVertexOut GroundVS(const device GroundVertexIn* vertex_array [[buffer(0)]],
+                                constant FrameCB&            frameData [[buffer(1)]],
+                                uint                         vid [[vertex_id]]) {
     GroundVertexOut out;
-
     float4 pos4 = float4(vertex_array[vid].position, 1.0f);
-    out.position = cam.viewProjectionMatrix * pos4;
+    
+    out.worldPosition = pos4.xyz;
+    out.position = frameData.projection * frameData.view * pos4;
     out.uv = vertex_array[vid].uv;
-
     return out;
 } // GroundVS
 

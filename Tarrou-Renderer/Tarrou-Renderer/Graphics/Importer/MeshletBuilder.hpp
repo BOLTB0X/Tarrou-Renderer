@@ -15,8 +15,7 @@ class Meshlet;
 
 class MeshletBuilder {
 public:
-    static std::unique_ptr<Meshlet> Build(const Mesh&, void*);
-
+    static std::vector<std::unique_ptr<Meshlet>> Build(const Mesh&, void*);
 private:
     static const size_t MAX_VERTICES = 64;
     static const size_t MAX_TRIANGLES = 124;

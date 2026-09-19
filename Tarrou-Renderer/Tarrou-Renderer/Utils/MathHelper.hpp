@@ -65,4 +65,15 @@ namespace MathHelper {
         m.columns[3] = simd_make_float4(t.x, t.y, t.z, 1.0f);
         return m;
     } // MakeTranslationMatrix
+
+
+    inline simd_float4x4 MatrixOrthographicLH(float width, float height, float nearZ, float farZ) {
+        return simd_matrix(
+            simd_make_float4(2.0f / width, 0.0f, 0.0f, 0.0f),
+            simd_make_float4(0.0f, 2.0f / height, 0.0f, 0.0f),
+            simd_make_float4(0.0f, 0.0f, 1.0f / (farZ - nearZ), 0.0f),
+            simd_make_float4(0.0f, 0.0f, nearZ / (nearZ - farZ), 1.0f)
+        );
+    } // MatrixOrthographicLH
+
 } // MathHelper
