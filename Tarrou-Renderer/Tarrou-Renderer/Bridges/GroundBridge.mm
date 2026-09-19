@@ -9,28 +9,30 @@
 #import "GroundBridge.h"
  
 extern "C" bool GroundBridge_InitPipeline(void*       devicePtr,
+                                          const char* shaderSourceRaw,
                                           const char* vertexFunctionName,
                                           const char* fragmentFunctionName,
                                           void**      outPipelineState,
                                           void**      outSamplerState) {
     @autoreleasepool {
         id<MTLDevice> device = (__bridge id<MTLDevice>)devicePtr;
-        if (!device || !vertexFunctionName || !fragmentFunctionName) return false;
- 
-        id<MTLLibrary> defaultLibrary = [device newDefaultLibrary];
-        if (!defaultLibrary) {
-            NSLog(@"[GroundBridge] Default shader library not found!");
+        NSString* shaderSource = [NSString stringWithUTF8String:shaderSourceRaw];
+        NSError* error = nil;
+
+        id<MTLLibrary> customLibrary = [device newLibraryWithSource:shaderSource options:nil error:&error];
+        if (!customLibrary) {
+            NSLog(@"[RendererBridge] Shader Compile Error: %@", error);
             return false;
         }
- 
+        
         NSString *vertexName = [NSString stringWithUTF8String:vertexFunctionName];
         NSString *fragmentName = [NSString stringWithUTF8String:fragmentFunctionName];
- 
-        id<MTLFunction> vertexFunc = [defaultLibrary newFunctionWithName:vertexName];
-        id<MTLFunction> fragmentFunc = [defaultLibrary newFunctionWithName:fragmentName];
- 
+
+        id<MTLFunction> vertexFunc = [customLibrary newFunctionWithName:vertexName];
+        id<MTLFunction> fragmentFunc = [customLibrary newFunctionWithName:fragmentName];
+
         if (!vertexFunc || !fragmentFunc) {
-            NSLog(@"[GroundBridge] 함수를 찾지 못함: vertex=%@ fragment=%@", vertexName, fragmentName);
+            NSLog(@"[RendererBridge] 함수를 찾지 못함: vertex=%@ fragment=%@", vertexName, fragmentName);
             return false;
         }
  
@@ -41,7 +43,6 @@ extern "C" bool GroundBridge_InitPipeline(void*       devicePtr,
         pipelineDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
         pipelineDesc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
  
-        NSError* error = nil;
         id<MTLRenderPipelineState> pipelineState = [device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
         if (!pipelineState) {
             NSLog(@"[GroundBridge] Pipeline creation error: %@", error);
@@ -82,14 +83,13 @@ extern "C" void* GroundBridge_CreateVertexBuffer(void*         devicePtr,
     }
 } // GroundBridge_CreateVertexBuffer
  
-extern "C" void GroundBridge_Draw(void*         encoderPtr,
-                                  void*         pipelineStatePtr,
-                                  void*         depthStatePtr,
-                                  void*         vertexBufferPtr,
-                                  unsigned int  vertexCount,
-                                  void*         texturePtr,
-                                  void*         samplerStatePtr,
-                                  simd_float4x4 viewProjMatrix) {
+extern "C" void GroundBridge_Draw(void*        encoderPtr,
+                                  void*        pipelineStatePtr,
+                                  void*        depthStatePtr,
+                                  void*        vertexBufferPtr,
+                                  unsigned int vertexCount,
+                                  void*        texturePtr,
+                                  void*        samplerStatePtr) {
     id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)encoderPtr;
     id<MTLRenderPipelineState> pipelineState = (__bridge id<MTLRenderPipelineState>)pipelineStatePtr;
     id<MTLDepthStencilState> depthState = (__bridge id<MTLDepthStencilState>)depthStatePtr;
@@ -105,7 +105,6 @@ extern "C" void GroundBridge_Draw(void*         encoderPtr,
     }
  
     [encoder setVertexBuffer:vertexBuffer offset:0 atIndex:0];
-    [encoder setVertexBytes:&viewProjMatrix length:sizeof(simd_float4x4) atIndex:1];
  
     [encoder setFragmentTexture:texture atIndex:0];
     [encoder setFragmentSamplerState:samplerState atIndex:0];

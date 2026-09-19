@@ -14,6 +14,8 @@
 class Camera;
 class Ground;
 class Buddha;
+class DirectionalLight;
+class CommonConstantBuffer;
 
 class Renderer {
 public:
@@ -48,13 +50,17 @@ public:
     void        SetClearColor(float, float, float, float);
 
 private:
-    ClearColor              m_clearColor;
-    void*                   m_device;
-    std::unique_ptr<Camera> m_Camera;
-    std::unique_ptr<Buddha> m_Buddha;
-    std::unique_ptr<Ground> m_Ground;
-    MetalResource           m_depthState;
-
+    ClearColor                            m_clearColor;
+    void*                                 m_device;
+    std::unique_ptr<Camera>               m_Camera;
+    std::unique_ptr<DirectionalLight>     m_DirLight;
+    std::unique_ptr<Buddha>               m_Buddha;
+    std::unique_ptr<Ground>               m_Ground;
+    MetalResource                         m_depthState;
+    std::unique_ptr<CommonConstantBuffer> m_CommonCB;
+    float                                 m_globalTime = 0.0f;
+    float                                 m_screenWidth = 0.0f;
+    float                                 m_screenHeight = 0.0f;
 }; // Renderer
 
 #endif /* Renderer_hpp */

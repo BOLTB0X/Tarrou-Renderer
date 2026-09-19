@@ -1,5 +1,5 @@
 //
-//  MetalTextureLoader.hpp
+//  MetalTextureLoader.h
 //  Tarrou-Renderer
 //
 //  Created by B0X on 9/15/26.

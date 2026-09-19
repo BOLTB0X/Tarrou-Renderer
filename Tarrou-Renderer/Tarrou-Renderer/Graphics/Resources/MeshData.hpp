@@ -8,23 +8,26 @@
 #ifndef MESHDATA_hpp
 #define MESHDATA_hpp
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 #include <string>
 #include "MetalResource.h"
  
 struct MeshSubmesh {
-    MetalResource indexBuffer;             // id<MTLBuffer>, 소유
+    MetalResource indexBuffer;
+    size_t        indexBufferOffset = 0;
     uint32_t      indexCount = 0;
-    uint32_t      indexTypeBytes = 2;      // 2=uint16, 4=uint32
-    uint32_t      primitiveType = 3;       // MTLPrimitiveTypeTriangle = 3
+    uint32_t      indexTypeBytes = 2;
+    uint32_t      primitiveType = 3;
 }; // MeshSubmesh
- 
+
 struct MeshPart {
-    MetalResource             vertexBuffer;   // id<MTLBuffer>, 소유
-    uint32_t                  vertexStride = 0;
-    uint32_t                  vertexCount = 0;
-    std::vector<MeshSubmesh>  subMeshes;
+    MetalResource            vertexBuffer;
+    size_t                   vertexBufferOffset = 0;
+    uint32_t                 vertexStride = 0;
+    uint32_t                 vertexCount = 0;
+    std::vector<MeshSubmesh> subMeshes;
 }; // MeshPart
  
 struct Mesh {

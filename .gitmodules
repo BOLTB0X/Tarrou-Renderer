@@ -1,3 +1,6 @@
 [submodule "Tarrou-Renderer/External/ThirdParty/imgui"]
 	path = Tarrou-Renderer/External/ThirdParty/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "Tarrou-Renderer/ThirdParty/ThirdParty/meshoptimizer"]
+	path = Tarrou-Renderer/ThirdParty/ThirdParty/meshoptimizer
+	url = https://github.com/zeux/meshoptimizer.git
