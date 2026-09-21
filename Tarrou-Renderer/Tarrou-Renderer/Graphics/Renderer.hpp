@@ -42,7 +42,7 @@ public:
 
     bool Init(void*, float, float);
     void Update(const UpdateParam&);
-    void Render(void*);
+    void Render(void*, void*);
     void OnResize(float, float);
     void OnGUI();
 
@@ -58,9 +58,13 @@ private:
     std::unique_ptr<Ground>               m_Ground;
     MetalResource                         m_depthState;
     std::unique_ptr<CommonConstantBuffer> m_CommonCB;
+    
     float                                 m_globalTime = 0.0f;
     float                                 m_screenWidth = 0.0f;
     float                                 m_screenHeight = 0.0f;
+    
+    MetalResource                         m_shadowTexture;
+    MetalResource                         m_shadowPassDescriptor;
 }; // Renderer
 
 #endif /* Renderer_hpp */

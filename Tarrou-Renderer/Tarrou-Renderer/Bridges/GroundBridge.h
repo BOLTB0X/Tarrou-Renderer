@@ -15,7 +15,6 @@
 extern "C" {
 #endif
  
-// 파이프라인 + 샘플러 상태 생성 (한 번만 호출)
 bool GroundBridge_InitPipeline(void*       devicePtr,
                                const char* shaderSourceRaw,
                                const char* vertexFunctionName,
@@ -31,6 +30,7 @@ void GroundBridge_Draw(void*         encoderPtr,
                        void*         vertexBufferPtr,
                        unsigned int  vertexCount,
                        void*         texturePtr,
+                       void*         shadowTexturePtr,
                        void*         samplerStatePtr);
  
 #ifdef __cplusplus

@@ -152,13 +152,6 @@ extern "C" void BuddhaBridge_DrawMeshletsInctance(void*    encoderPtr,
                                                   void*    instanceBuffer,
                                                   size_t   meshletCount,
                                                   uint32_t instanceCount) {
-    //NSLog(@"[BuddhaBridge] DRAW meshletCount=%zu instanceCount=%u", meshletCount, instanceCount);
-    id<MTLBuffer> instanceMTLBuffer = (__bridge id<MTLBuffer>)instanceBuffer;
-    if (instanceMTLBuffer && instanceMTLBuffer.length >= sizeof(simd_float4x4)) {
-        const float* matrix = static_cast<const float*>(instanceMTLBuffer.contents);
-        NSLog(@"[BuddhaBridge] instance[0] col3=(%f, %f, %f, %f)",
-              matrix[12], matrix[13], matrix[14], matrix[15]);
-    }
     id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)encoderPtr;
     id<MTLRenderPipelineState> pipelineState = (__bridge id<MTLRenderPipelineState>)pipelineStatePtr;
     id<MTLDepthStencilState> depthState = (__bridge id<MTLDepthStencilState>)depthStatePtr;

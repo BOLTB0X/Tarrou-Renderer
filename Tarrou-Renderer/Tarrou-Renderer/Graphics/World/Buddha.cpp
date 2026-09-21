@@ -13,7 +13,9 @@
 #include "GlobalVariables.hpp"
 #include "MathHelper.hpp"
 #include "DebugHelper.hpp"
+//
 #include "BuddhaBridge.h"
+#include "ShadowMapBridge.h"
 #include "RendererBridge.h"
 // STL
 #include <iostream>
@@ -49,15 +51,22 @@ bool Buddha::Init(void* device) {
         return false;
     }
     m_pipelineState = MetalResource::Adopt(rawPipelineState);
+    void* rawShadowPipelineState = nullptr;
+    std::string shadowShaderFilePath = GlobalVariables::GetRootPath(SHADOW_MESH_SHADER);
+    std::string shadowSource = ShaderLoader::Load(shadowShaderFilePath, baseDirPath);
+        
+    if (!ShadowMapBridge_InitShadowPipeline(device,
+                                            shadowSource.c_str(),
+                                            SHADOW_SHADER_OBJECT,
+                                            SHADOW_SHADER_MESH,
+                                            objectPayloadSize,
+                                            &rawShadowPipelineState)) { return false; }
+    m_shadowPipelineState = MetalResource::Adopt(rawShadowPipelineState);
     
     uint32_t maxVertexIndex = 0;
     for (uint32_t idx : m_meshletsList[0]->m_meshletVertices) {
         maxVertexIndex = std::max(maxVertexIndex, idx);
     }
-//    std::cout << "[Buddha] part0 vertexCount=" << m_mesh.parts[0].vertexCount
-//              << " vertexBufferOffset=" << m_mesh.parts[0].vertexBufferOffset
-//              << " maxVertexIndexUsedByMeshlets=" << maxVertexIndex << std::endl;
-//    
     return true;
 } // Init
  
@@ -80,9 +89,29 @@ void Buddha::Render(void* renderCommandEncoder, void* depthState) {
         partIndex++;
     }
 } // Render
+
+void Buddha::RenderShadow(void* renderCommandEncoder, void* depthState) {
+    if (!m_shadowPipelineState || m_instanceCount == 0) return;
+
+    int partIndex = 0;
+    for (const auto& meshletData : m_meshletsList) {
+        BuddhaBridge_DrawMeshletsInctance(renderCommandEncoder,
+                                          m_shadowPipelineState.Get(),
+                                          depthState,
+                                          meshletData->m_meshletBuffer.Get(),
+                                          meshletData->m_meshletVerticesBuffer.Get(),
+                                          meshletData->m_meshletTrianglesBuffer.Get(),
+                                          m_mesh.parts[partIndex].vertexBuffer.Get(),
+                                          m_mesh.parts[partIndex].vertexBufferOffset,
+                                          m_instanceBuffer.Get(),
+                                          meshletData->m_meshlets.size(),
+                                          m_instanceCount);
+        partIndex++;
+    }
+} // RenderShadow
  
 void Buddha::SetInstances(void* device, const std::vector<simd_float3>& positions) {
-    //std::cout << "[Buddha] SetInstances called, positions.size()=" << positions.size() << std::endl;
+    std::cout << "[Buddha] SetInstances called, positions.size()=" << positions.size() << std::endl;
     std::vector<simd_float4x4> transforms;
     transforms.reserve(positions.size());
     for (const auto& p : positions) {
@@ -98,11 +127,4 @@ void Buddha::SetInstances(void* device, const std::vector<simd_float3>& position
  
     m_instanceBuffer = MetalResource::Adopt(rawBuffer);
     m_instanceCount = static_cast<uint32_t>(transforms.size());
-    
-//    float* check = static_cast<float*>(RendererBridge_GetBufferContents(m_instanceBuffer.Get()));
-//    if (check) {
-//        std::cout << "[Buddha] instance[0] col3 = ("
-//                  << check[12] << ", " << check[13] << ", " << check[14] << ", " << check[15] << ")"
-//                  << std::endl;
-//    }
 } // SetInstances

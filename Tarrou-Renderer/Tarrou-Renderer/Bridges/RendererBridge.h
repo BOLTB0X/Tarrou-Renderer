@@ -19,6 +19,8 @@ void* RendererBridge_CreateDepthState(void*);
 void* RendererBridge_GetBufferContents(void*);
 void* RendererBridge_CreateBuffer(void*, const void*, size_t);
 void  RendererBridge_BindConstantBuffers(void*, const void*, size_t, const void*, size_t);
+void* RendererBridge_BeginRenderPass(void*, void*);
+void  RendererBridge_EndEncoding(void*);
 
 #ifdef __cplusplus
 }

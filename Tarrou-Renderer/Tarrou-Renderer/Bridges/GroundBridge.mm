@@ -89,12 +89,14 @@ extern "C" void GroundBridge_Draw(void*        encoderPtr,
                                   void*        vertexBufferPtr,
                                   unsigned int vertexCount,
                                   void*        texturePtr,
+                                  void*        shadowTexturePtr,
                                   void*        samplerStatePtr) {
     id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)encoderPtr;
     id<MTLRenderPipelineState> pipelineState = (__bridge id<MTLRenderPipelineState>)pipelineStatePtr;
     id<MTLDepthStencilState> depthState = (__bridge id<MTLDepthStencilState>)depthStatePtr;
     id<MTLBuffer> vertexBuffer = (__bridge id<MTLBuffer>)vertexBufferPtr;
     id<MTLTexture> texture = (__bridge id<MTLTexture>)texturePtr;
+    id<MTLTexture> shadowTexture = (__bridge id<MTLTexture>)shadowTexturePtr;
     id<MTLSamplerState> samplerState = (__bridge id<MTLSamplerState>)samplerStatePtr;
  
     if (!encoder || !pipelineState || !vertexBuffer || !texture) return;
@@ -107,6 +109,7 @@ extern "C" void GroundBridge_Draw(void*        encoderPtr,
     [encoder setVertexBuffer:vertexBuffer offset:0 atIndex:0];
  
     [encoder setFragmentTexture:texture atIndex:0];
+    [encoder setFragmentTexture:shadowTexture atIndex:1];
     [encoder setFragmentSamplerState:samplerState atIndex:0];
  
     [encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:vertexCount];
