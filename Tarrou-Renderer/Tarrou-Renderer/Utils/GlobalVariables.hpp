@@ -25,7 +25,7 @@ namespace GlobalVariables {
     static constexpr simd_float3 DEFAULT_POSITION = { 0.0f, 1.0f, -5.0f };
     static constexpr simd_float3 DEFAULT_ROTATION = { 0.0f, 0.0f, 0.0f };
 
-    static constexpr float       GROUND_SIZE                  = 10.0f;
+    static constexpr float       GROUND_SIZE                  = 20.0f;
     static constexpr float       GROUND_HEIGHT                = 0.0f;
 
     static constexpr float       GROUND_TEXTURE_TILING        = 10.0f;
@@ -85,6 +85,10 @@ namespace GlobalVariables {
     static constexpr const char* GROUND_SHADER          = MESH_SHADER_PATH "/Ground.metal";
     static constexpr const char* GROUND_SHADER_VERTEX   = "GroundVS";
     static constexpr const char* GROUND_SHADER_FRAGMENT = "GroundPS";
+
+    static constexpr const char* SHADOW_MESH_SHADER = MESH_SHADER_PATH "/ShadowMesh.metal";
+    static constexpr const char* SHADOW_SHADER_MESH    = "ShadowMeshMS";
+    static constexpr const char* SHADOW_SHADER_OBJECT   = "ShadowObjectOS";
 
 #undef MESH_SHADER_PATH
 } // GlobalVariables - Shader

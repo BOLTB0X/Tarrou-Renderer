@@ -11,6 +11,7 @@
 #include "GlobalVariables.hpp"
 #include "CommonConstantBuffer.hpp"
 #include "RendererBridge.h"
+#include "ShadowMapBridge.h"
 #include "Buddha.hpp"
 #include "Ground.hpp"
 #include "MathHelper.hpp"
@@ -48,16 +49,21 @@ bool Renderer::Init(void* metalDevice, float width, float height) {
 
     m_depthState = MetalResource::Adopt(RendererBridge_CreateDepthState(m_device));
     if (!m_depthState) return false;
+    
+    m_shadowTexture = MetalResource::Adopt(ShadowMapBridge_CreateShadowDepthTexture(m_device, GlobalVariables::SHADOW_MAP_WIDTH, GlobalVariables::SHADOW_MAP_HEIGHT));
+    m_shadowPassDescriptor = MetalResource::Adopt(ShadowMapBridge_CreateShadowPassDescriptor(m_shadowTexture.Get()));
 
-    if (!m_Buddha->Init(m_device)) {
-        return false;
-    }
+    if (!m_Buddha->Init(m_device)) { return false; }
 
     if (!m_Ground->Init(m_device)) {
         return false;
     } else {
         std::vector<simd_float3> buddhaInstances = {
-            simd_make_float3(0.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, 0.0f)        };
+            simd_make_float3(0.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, 0.0f),
+            simd_make_float3(-3.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, 0.0f),
+            simd_make_float3(3.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, 3.0f),
+            simd_make_float3(-1.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, -1.0f)
+        };
         m_Buddha->SetInstances(m_device, buddhaInstances);
     }
 
@@ -105,12 +111,29 @@ void Renderer::Update(const UpdateParam& param) {
     m_CommonCB->UpdateLightCB(lightCB);
 } // Update
 
-void Renderer::Render(void* renderCommandEncoder) {
-    if (!renderCommandEncoder) return;
+void Renderer::Render(void* commandBuffer, void* mainPassDescriptor) {
+    if (!commandBuffer || !mainPassDescriptor) return;
     
-    m_CommonCB->Bind(renderCommandEncoder);
-    m_Ground->Render(renderCommandEncoder, m_depthState.Get());
-    m_Buddha->Render(renderCommandEncoder, m_depthState.Get());
+    // ==========================================
+    // Pass 1: Shadow Map 기록 (빛의 시점)
+    // ==========================================
+    void* shadowEncoder = RendererBridge_BeginRenderPass(commandBuffer, m_shadowPassDescriptor.Get());
+    if (shadowEncoder) {
+        m_CommonCB->Bind(shadowEncoder); // 빛 행렬(LightCB) 바인딩
+        m_Buddha->RenderShadow(shadowEncoder, m_depthState.Get());
+        RendererBridge_EndEncoding(shadowEncoder);
+    }
+
+    // ==========================================
+    // Pass 2: Main Render (카메라 시점)
+    // ==========================================
+    void* mainEncoder = RendererBridge_BeginRenderPass(commandBuffer, mainPassDescriptor);
+    if (mainEncoder) {
+        m_CommonCB->Bind(mainEncoder);
+        m_Ground->Render(mainEncoder, m_depthState.Get(), m_shadowTexture.Get());
+        m_Buddha->Render(mainEncoder, m_depthState.Get());
+        RendererBridge_EndEncoding(mainEncoder);
+    }
 } // Render
 
 void Renderer::OnResize(float width, float height) {
@@ -125,7 +148,6 @@ void Renderer::OnResize(float width, float height) {
 void Renderer::OnGUI() {
     m_Camera->OnGUI();
     m_DirLight->OnGUI();
-
 } // OnGUI
 
 Renderer::ClearColor& Renderer::GetClearColor() { return m_clearColor; }

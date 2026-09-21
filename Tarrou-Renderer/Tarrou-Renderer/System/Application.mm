@@ -118,23 +118,39 @@
     [self buildUI];
     ImGui::Render();
 
-    id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:descriptor];
-    encoder.label = @"MainRenderEncoder";
-
-    // 3D 그래픽스 렌더링
-    _renderer->Render((__bridge void*)encoder);
+//    id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:descriptor];
+//    encoder.label = @"MainRenderEncoder";
+//
+//    // 3D 그래픽스 렌더링
+//    _renderer->Render((__bridge void*)encoder, (__bridge void*)view.currentRenderPassDescriptor);
+    _renderer->Render((__bridge void*)commandBuffer, (__bridge void*)descriptor);
 
     // ImGui UI 오버레이 렌더링
-    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, encoder);
+//    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, encoder);
+//
+//    [encoder endEncoding];
+//
+//    id<CAMetalDrawable> drawable = view.currentDrawable;
+//    if (drawable) {
+//        [commandBuffer presentDrawable:drawable];
+//    }
+//    [commandBuffer commit];
+    descriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
+        
+    id<MTLRenderCommandEncoder> uiEncoder = [commandBuffer renderCommandEncoderWithDescriptor:descriptor];
+    uiEncoder.label = @"UIRenderEncoder";
 
-    [encoder endEncoding];
+    // ImGui UI 오버레이 렌더링
+    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, uiEncoder);
+
+    [uiEncoder endEncoding];
 
     id<CAMetalDrawable> drawable = view.currentDrawable;
     if (drawable) {
         [commandBuffer presentDrawable:drawable];
     }
     [commandBuffer commit];
-}
+} // drawInMTKView
 
 - (void)buildUI {
     ImGui::Begin("Tarrou Renderer");
@@ -160,9 +176,10 @@
     }
     
     ImGui::Separator();
-    if (ImGui::TreeNodeEx("Camera Control", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::TreeNodeEx("Control", ImGuiTreeNodeFlags_DefaultOpen)) {
         _renderer->OnGUI();
         ImGui::TreePop();
+        ImGui::Separator();
     }
     
     ImGui::End();

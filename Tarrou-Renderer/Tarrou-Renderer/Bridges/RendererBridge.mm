@@ -60,3 +60,16 @@ extern "C" void RendererBridge_BindConstantBuffers(void*       encoderPtr,
     [encoder setFragmentBytes:lightCBPtr length:lightCBSize atIndex:2];
     [encoder setMeshBytes:lightCBPtr length:lightCBSize atIndex:2];
 } // RendererBridge_BindConstantBuffers
+
+extern "C" void* RendererBridge_BeginRenderPass(void* commandBufferPtr, void* passDescriptorPtr) {
+    id<MTLCommandBuffer> commandBuffer = (__bridge id<MTLCommandBuffer>)commandBufferPtr;
+    MTLRenderPassDescriptor* passDesc = (__bridge MTLRenderPassDescriptor*)passDescriptorPtr;
+    
+    id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:passDesc];
+    return (__bridge void*)encoder;
+} // RendererBridge_BeginRenderPass
+
+extern "C" void RendererBridge_EndEncoding(void* encoderPtr) {
+    id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)encoderPtr;
+    [encoder endEncoding];
+} // RendererBridge_EndEncoding
