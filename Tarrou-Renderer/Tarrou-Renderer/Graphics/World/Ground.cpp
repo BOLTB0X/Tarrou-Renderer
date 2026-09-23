@@ -68,7 +68,7 @@ bool Ground::Init(void* device) {
     return true;
 } // Init
 
-void Ground::Render(void* renderCommandEncoder, void* depthState, void* shadowTexture) {
+void Ground::Render(void* renderCommandEncoder, void* depthState) {
     if (!m_pipelineState || !m_vertexBuffer || !m_texture) return;
 
     GroundBridge_Draw(
@@ -78,7 +78,6 @@ void Ground::Render(void* renderCommandEncoder, void* depthState, void* shadowTe
         m_vertexBuffer.Get(),
         static_cast<unsigned int>(m_vertices.size()),
         m_texture->GetNativeTexture(),
-        shadowTexture,
         m_samplerState.Get());
 } // Render
 

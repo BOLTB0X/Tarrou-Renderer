@@ -29,9 +29,9 @@ namespace GlobalVariables {
     static constexpr float       GROUND_HEIGHT                = 0.0f;
 
     static constexpr float       GROUND_TEXTURE_TILING        = 10.0f;
-    static constexpr float       BUDDHA_OFFSET                = 0.45f;
+    static constexpr float       BUDDHA_OFFSET                = 0.35f;
 
-    static constexpr simd_float3 LIGHT_DIR = { 0.577f, -0.577f, 0.577f };
+    static constexpr simd_float3 LIGHT_DIR = { 0.5f, -1.0f, 0.5f };
     static constexpr simd_float4 LIGHT_DIFF = { 1.0f, 1.0f, 1.0f, 1.0f };
     static constexpr simd_float4 LIGHT_AMB = { 0.2f, 0.2f, 0.2f, 1.0f};
     static constexpr float       LIGHT_INTEN = 5.0f;
@@ -42,7 +42,7 @@ namespace GlobalVariables {
     static constexpr float       SHADOW_FAR_Z = 1000.0f;
     static constexpr float       SHADOW_MAP_WIDTH = 2048.0f;
     static constexpr float       SHADOW_MAP_HEIGHT = 2048.0f;
-    static constexpr float       SHADOW_BIAS = 0.005f;
+    static constexpr float       SHADOW_BIAS = 0.0002f;
     static constexpr float       SHADOW_SPREAD = 1.0f;
 } // GlobalVariables - 변수
 

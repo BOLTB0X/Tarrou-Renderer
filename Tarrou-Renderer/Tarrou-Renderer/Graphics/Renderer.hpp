@@ -65,6 +65,7 @@ private:
     
     MetalResource                         m_shadowTexture;
     MetalResource                         m_shadowPassDescriptor;
+    MetalResource                         m_shadowSampler;
 }; // Renderer
 
 #endif /* Renderer_hpp */

@@ -37,34 +37,34 @@ vertex GroundVertexOut GroundVS(const device GroundVertexIn* vertex_array [[buff
     return out;
 } // GroundVS
 
-fragment float4 GroundPS(GroundVertexOut      in            [[stage_in]],
-                         constant DirectionalLightCB& lightData [[buffer(2)]],
-                         texture2d<float>     groundTexture [[texture(0)]],
-                         depth2d<float>       shadowTexture [[texture(1)]],
-                         sampler              groundSampler [[sampler(0)]]) {
+fragment float4 GroundPS(GroundVertexOut              in            [[stage_in]],
+                         constant DirectionalLightCB& lightData     [[buffer(2)]],
+                         texture2d<float>             groundTexture [[texture(0)]],
+                         sampler                      groundSampler [[sampler(0)]],
+                         depth2d<float>               shadowTexture [[texture(1)]],
+                         sampler                      shadowSampler [[sampler(1)]]) {
     float4 color = groundTexture.sample(groundSampler, in.uv);
-
     float3 ndc = in.lightSpacePos.xyz / in.lightSpacePos.w;
     float2 shadowUV = ndc.xy * 0.5 + 0.5;
-
-    // 필요 시 뒤집기 (상하 반전이 보이면 이 줄을 켜/끄며 테스트)
     shadowUV.y = 1.0 - shadowUV.y;
 
     float shadowFactor = 1.0;
 
     if (shadowUV.x >= 0.0 && shadowUV.x <= 1.0 && shadowUV.y >= 0.0 && shadowUV.y <= 1.0) {
         float currentDepth = ndc.z;
-
-        // 수동 비교 시에는 nearest가 더 예측 가능
-        constexpr sampler shadowSampler(coord::normalized, filter::nearest, address::clamp_to_edge);
-
-        float shadowMapDepth = shadowTexture.sample(shadowSampler, shadowUV);
-
-        // “수신자가 더 멀면(=가려졌다면) 그림자”
-        if ((currentDepth - lightData.shadowBias) < shadowMapDepth) {
-            shadowFactor = 0.4;
-        }
+        float2 texelSize = float2(1.0 / lightData.shadowMapWidth,
+                                  1.0 / lightData.shadowMapHeight);
+        float shadow = CalculateShadowPCF(shadowTexture,
+                                           shadowSampler,
+                                           shadowUV,
+                                           currentDepth,
+                                           texelSize,
+                                           lightData.shadowBias,
+                                           true,
+                                           3);
+        shadowFactor = mix(1.0, 0.4, shadow);
     }
 
     return float4(color.rgb * shadowFactor, color.a);
 }
+

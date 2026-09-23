@@ -48,4 +48,32 @@ struct DirectionalLightCB {
     float    shadowSpread;
 }; // DirectionalLightCB
 
+inline float CalculateShadowPCF(depth2d<float> shadowTexture,
+                                sampler        shadowSampler,
+                                float2         shadowUV,
+                                float          currentDepth,
+                                float2         texelSize,
+                                float          shadowBias,
+                                bool           reverseZ,
+                                int            kernelRadius) {
+    float occlusion = 0.0;
+    int sampleCount = 0;
+
+    for (int y = -kernelRadius; y <= kernelRadius; ++y) {
+        for (int x = -kernelRadius; x <= kernelRadius; ++x) {
+            float2 offsetUV = shadowUV + float2(x, y) * texelSize;
+            float sampledDepth = shadowTexture.sample(shadowSampler, offsetUV);
+
+            bool isOccluded = reverseZ
+                ? sampledDepth > (currentDepth + shadowBias)
+                : sampledDepth < (currentDepth - shadowBias);
+
+            if (isOccluded) { occlusion += 1.0; }
+            sampleCount++;
+        } // for (int x = -kernelRadius; x <= kernelRadius; ++x)
+    } // for (int y = -kernelRadius; y <= kernelRadius; ++y)
+
+    return occlusion / float(sampleCount);
+} // CalculateShadowPCF
+
 #endif /* ShaderCommon_h */

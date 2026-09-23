@@ -24,7 +24,7 @@ public:
     Ground& operator=(const Ground&) = delete;
 
     bool Init(void*);
-    void Render(void*, void*, void*);
+    void Render(void*, void*);
 
     float GetHeight() const;
 

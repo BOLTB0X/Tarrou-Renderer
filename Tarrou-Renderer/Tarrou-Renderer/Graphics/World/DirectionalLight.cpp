@@ -47,7 +47,12 @@ void DirectionalLight::Frame() {
     }
 
     m_viewMatrix = MathHelper::MatrixLookAtLH(lightPos, m_lookAt, upVector);
-    m_projectionMatrix = MathHelper::MatrixOrthographicLH(SHADOW_VIEW_WIDTH, SHADOW_VIEW_HEIGHT, SHADOW_NEAR_Z, SHADOW_FAR_Z);
+    m_projectionMatrix = MathHelper::MatrixOrthographicReverseZLH(
+            SHADOW_VIEW_WIDTH,
+            SHADOW_VIEW_HEIGHT,
+            SHADOW_NEAR_Z,
+            SHADOW_FAR_Z
+        );
 } // Frame
 
 void          DirectionalLight::SetLookAt(simd_float3 lookAt) { m_lookAt = lookAt; }

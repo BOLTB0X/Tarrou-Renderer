@@ -52,6 +52,7 @@ bool Renderer::Init(void* metalDevice, float width, float height) {
     
     m_shadowTexture = MetalResource::Adopt(ShadowMapBridge_CreateShadowDepthTexture(m_device, GlobalVariables::SHADOW_MAP_WIDTH, GlobalVariables::SHADOW_MAP_HEIGHT));
     m_shadowPassDescriptor = MetalResource::Adopt(ShadowMapBridge_CreateShadowPassDescriptor(m_shadowTexture.Get()));
+    m_shadowSampler = MetalResource::Adopt(RendererBridge_CreateShadowSampler(m_device));
 
     if (!m_Buddha->Init(m_device)) { return false; }
 
@@ -62,7 +63,8 @@ bool Renderer::Init(void* metalDevice, float width, float height) {
             simd_make_float3(0.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, 0.0f),
             simd_make_float3(-3.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, 0.0f),
             simd_make_float3(3.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, 3.0f),
-            simd_make_float3(-1.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, -1.0f)
+            simd_make_float3(-1.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, -1.0f),
+            simd_make_float3(-2.5f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, -1.7f)
         };
         m_Buddha->SetInstances(m_device, buddhaInstances);
     }
@@ -114,12 +116,9 @@ void Renderer::Update(const UpdateParam& param) {
 void Renderer::Render(void* commandBuffer, void* mainPassDescriptor) {
     if (!commandBuffer || !mainPassDescriptor) return;
     
-    // ==========================================
-    // Pass 1: Shadow Map 기록 (빛의 시점)
-    // ==========================================
     void* shadowEncoder = RendererBridge_BeginRenderPass(commandBuffer, m_shadowPassDescriptor.Get());
     if (shadowEncoder) {
-        m_CommonCB->Bind(shadowEncoder); // 빛 행렬(LightCB) 바인딩
+        m_CommonCB->Bind(shadowEncoder, nullptr, nullptr); // 빛 행렬(LightCB) 바인딩
         m_Buddha->RenderShadow(shadowEncoder, m_depthState.Get());
         RendererBridge_EndEncoding(shadowEncoder);
     }
@@ -129,8 +128,8 @@ void Renderer::Render(void* commandBuffer, void* mainPassDescriptor) {
     // ==========================================
     void* mainEncoder = RendererBridge_BeginRenderPass(commandBuffer, mainPassDescriptor);
     if (mainEncoder) {
-        m_CommonCB->Bind(mainEncoder);
-        m_Ground->Render(mainEncoder, m_depthState.Get(), m_shadowTexture.Get());
+        m_CommonCB->Bind(mainEncoder, m_shadowTexture.Get(), m_shadowSampler.Get());
+        m_Ground->Render(mainEncoder, m_depthState.Get());
         m_Buddha->Render(mainEncoder, m_depthState.Get());
         RendererBridge_EndEncoding(mainEncoder);
     }
