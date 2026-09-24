@@ -51,7 +51,7 @@ public:
 
     void UpdateFrameCB(const FrameCB&);
     void UpdateLightCB(const DirectionalLightCB&);
-    void Bind(void*);
+    void Bind(void*, void*, void*);
 
 private:
     FrameCB            m_frameCB;

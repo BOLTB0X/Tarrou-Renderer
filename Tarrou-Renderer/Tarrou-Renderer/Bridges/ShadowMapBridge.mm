@@ -34,7 +34,7 @@ extern "C" void* ShadowMapBridge_CreateShadowPassDescriptor(void* depthTexturePt
     passDescriptor.depthAttachment.texture = depthTexture;
     passDescriptor.depthAttachment.loadAction = MTLLoadActionClear;    // 매 프레임 시작 시 초기화
     passDescriptor.depthAttachment.storeAction = MTLStoreActionStore;  // 렌더링 결과를 텍스처에 저장
-    passDescriptor.depthAttachment.clearDepth = 0.0;
+    passDescriptor.depthAttachment.clearDepth = 0.0f;
     
     return (void*)CFBridgingRetain(passDescriptor);
 } // RendererBridge_CreateShadowPassDescriptor

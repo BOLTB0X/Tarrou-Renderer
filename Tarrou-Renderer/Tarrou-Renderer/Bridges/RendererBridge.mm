@@ -44,21 +44,47 @@ extern "C" void* RendererBridge_CreateBuffer(void* devicePtr, const void* data, 
     }
 } // RendererBridge_CreateBuffer
 
+extern "C" void* RendererBridge_CreateShadowSampler(void* devicePtr) {
+    @autoreleasepool {
+        id<MTLDevice> device = (__bridge id<MTLDevice>)devicePtr;
+        if (!device) return nullptr;
+
+        MTLSamplerDescriptor *desc = [[MTLSamplerDescriptor alloc] init];
+        desc.minFilter = MTLSamplerMinMagFilterNearest;
+        desc.magFilter = MTLSamplerMinMagFilterNearest;
+        desc.sAddressMode = MTLSamplerAddressModeClampToEdge;
+        desc.tAddressMode = MTLSamplerAddressModeClampToEdge;
+
+        id<MTLSamplerState> sampler = [device newSamplerStateWithDescriptor:desc];
+        return (void*)CFBridgingRetain(sampler);
+    }
+} // RendererBridge_CreateShadowSampler
+
 extern "C" void RendererBridge_BindConstantBuffers(void*       encoderPtr,
                                                    const void* frameCBPtr, size_t frameCBSize,
-                                                   const void* lightCBPtr, size_t lightCBSize) {
+                                                   const void* lightCBPtr, size_t lightCBSize,
+                                                   void*       shadowTexturePtr,
+                                                   void*       shadowSamplerPtr) {
     id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)encoderPtr;
     if (!encoder) return;
 
-    // Index 1: FrameCB
     [encoder setVertexBytes:frameCBPtr length:frameCBSize atIndex:1];
     [encoder setFragmentBytes:frameCBPtr length:frameCBSize atIndex:1];
     [encoder setMeshBytes:frameCBPtr length:frameCBSize atIndex:1];
-        
-    // Index 2: DirectionalLightCB
+            
     [encoder setVertexBytes:lightCBPtr length:lightCBSize atIndex:2];
     [encoder setFragmentBytes:lightCBPtr length:lightCBSize atIndex:2];
     [encoder setMeshBytes:lightCBPtr length:lightCBSize atIndex:2];
+
+    // Texture Slot 1: ShadowMap, Sampler Slot 1: ShadowSampler (공용 바인딩)
+    if (shadowTexturePtr) {
+        id<MTLTexture> shadowTex = (__bridge id<MTLTexture>)shadowTexturePtr;
+        [encoder setFragmentTexture:shadowTex atIndex:1];
+    }
+    if (shadowSamplerPtr) {
+        id<MTLSamplerState> shadowSamp = (__bridge id<MTLSamplerState>)shadowSamplerPtr;
+        [encoder setFragmentSamplerState:shadowSamp atIndex:1];
+    }
 } // RendererBridge_BindConstantBuffers
 
 extern "C" void* RendererBridge_BeginRenderPass(void* commandBufferPtr, void* passDescriptorPtr) {

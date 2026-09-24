@@ -105,7 +105,7 @@ void BuddhaMeshMS(mesh_t                            output,
 float4 BuddhaMeshPS(VertexOut                    in [[stage_in]],
                     constant DirectionalLightCB& lightData [[buffer(2)]]) {
     float3 norm = normalize(in.normal);
-    float light = saturate(dot(norm, lightData.lightDir)) * 0.8 + 0.2;
+    float light = saturate(dot(norm, -lightData.lightDir)) * 0.8 + 0.2;
 
     return float4(in.meshletColor * light, 1.0);
 } // BuddhaMeshPS

@@ -30,7 +30,6 @@ void GroundBridge_Draw(void*         encoderPtr,
                        void*         vertexBufferPtr,
                        unsigned int  vertexCount,
                        void*         texturePtr,
-                       void*         shadowTexturePtr,
                        void*         samplerStatePtr);
  
 #ifdef __cplusplus

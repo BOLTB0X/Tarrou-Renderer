@@ -18,10 +18,11 @@ CommonConstantBuffer::~CommonConstantBuffer() {}
 void CommonConstantBuffer::UpdateFrameCB(const FrameCB& data) { m_frameCB = data; }
 void CommonConstantBuffer::UpdateLightCB(const DirectionalLightCB& data) { m_lightCB = data; }
 
-void CommonConstantBuffer::Bind(void* renderCommandEncoder) {
+void CommonConstantBuffer::Bind(void* renderCommandEncoder, void* shadowTexture, void* shadowSampler) {
     if (!renderCommandEncoder) return;
     
     RendererBridge_BindConstantBuffers(renderCommandEncoder,
                                        &m_frameCB, sizeof(FrameCB),
-                                       &m_lightCB, sizeof(DirectionalLightCB));
+                                       &m_lightCB, sizeof(DirectionalLightCB),
+                                       shadowTexture, shadowSampler);
 } // Bind
