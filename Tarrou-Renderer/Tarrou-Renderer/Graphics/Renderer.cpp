@@ -62,9 +62,9 @@ bool Renderer::Init(void* metalDevice, float width, float height) {
         std::vector<simd_float3> buddhaInstances = {
             simd_make_float3(0.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, 0.0f),
             simd_make_float3(-3.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, 0.0f),
-            simd_make_float3(3.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, 3.0f),
-            simd_make_float3(-1.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, -1.0f),
-            simd_make_float3(-2.5f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, -1.7f)
+            simd_make_float3(3.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, -3.0f),
+//            simd_make_float3(-1.0f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, -1.0f),
+//            simd_make_float3(-2.5f, m_Ground->GetHeight() + GlobalVariables::BUDDHA_OFFSET, -1.7f)
         };
         m_Buddha->SetInstances(m_device, buddhaInstances);
     }
@@ -123,9 +123,6 @@ void Renderer::Render(void* commandBuffer, void* mainPassDescriptor) {
         RendererBridge_EndEncoding(shadowEncoder);
     }
 
-    // ==========================================
-    // Pass 2: Main Render (카메라 시점)
-    // ==========================================
     void* mainEncoder = RendererBridge_BeginRenderPass(commandBuffer, mainPassDescriptor);
     if (mainEncoder) {
         m_CommonCB->Bind(mainEncoder, m_shadowTexture.Get(), m_shadowSampler.Get());
