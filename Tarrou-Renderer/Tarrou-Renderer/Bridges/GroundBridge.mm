@@ -42,7 +42,7 @@ extern "C" bool GroundBridge_InitPipeline(void*       devicePtr,
         pipelineDesc.fragmentFunction = fragmentFunc;
         pipelineDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
         pipelineDesc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
- 
+        
         id<MTLRenderPipelineState> pipelineState = [device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
         if (!pipelineState) {
             NSLog(@"[GroundBridge] Pipeline creation error: %@", error);
@@ -103,6 +103,8 @@ extern "C" void GroundBridge_Draw(void*        encoderPtr,
     if (depthState) {
         [encoder setDepthStencilState:depthState];
     }
+    [encoder setFrontFacingWinding:MTLWindingCounterClockwise];
+    [encoder setCullMode:MTLCullModeBack];
  
     [encoder setVertexBuffer:vertexBuffer offset:0 atIndex:0];
  
@@ -111,3 +113,4 @@ extern "C" void GroundBridge_Draw(void*        encoderPtr,
  
     [encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:vertexCount];
 } // GroundBridge_Draw
+

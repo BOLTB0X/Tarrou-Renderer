@@ -75,6 +75,8 @@ extern "C" void BuddhaBridge_DrawMeshlets(void*  encoderPtr,
     if (depthState) {
         [encoder setDepthStencilState:depthState];
     }
+    [encoder setFrontFacingWinding:MTLWindingCounterClockwise];
+    [encoder setCullMode:MTLCullModeBack];
 
     [encoder setMeshBuffer:(__bridge id<MTLBuffer>)meshletBuffer offset:0 atIndex:0];
     [encoder setMeshBuffer:(__bridge id<MTLBuffer>)meshletVerticesBuffer offset:0 atIndex:3];
@@ -162,6 +164,8 @@ extern "C" void BuddhaBridge_DrawMeshletsInctance(void*    encoderPtr,
     if (depthState) {
         [encoder setDepthStencilState:depthState];
     }
+    [encoder setFrontFacingWinding:MTLWindingClockwise];
+    [encoder setCullMode:MTLCullModeBack];
      
     [encoder setMeshBuffer:(__bridge id<MTLBuffer>)meshletBuffer offset:0 atIndex:0];
     [encoder setMeshBuffer:(__bridge id<MTLBuffer>)meshletVerticesBuffer offset:0 atIndex:3];
@@ -177,3 +181,4 @@ extern "C" void BuddhaBridge_DrawMeshletsInctance(void*    encoderPtr,
         threadsPerObjectThreadgroup:threadsPerObjectThreadgroup
         threadsPerMeshThreadgroup:threadsPerMeshThreadgroup];
 } // BuddhaBridge_DrawMeshletsInctance
+
