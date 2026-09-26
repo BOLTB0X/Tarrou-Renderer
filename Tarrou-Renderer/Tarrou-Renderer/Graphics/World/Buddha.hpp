@@ -24,7 +24,7 @@ public:
     Buddha& operator=(const Buddha&) = delete;
  
     bool Init(void*);
-    void Render(void*, void*);
+    void Render(void*, void*, const simd_float4*, simd_float3, bool);
     void RenderShadow(void*, void*);
     void SetInstances(void*, const std::vector<simd_float3>&);
     

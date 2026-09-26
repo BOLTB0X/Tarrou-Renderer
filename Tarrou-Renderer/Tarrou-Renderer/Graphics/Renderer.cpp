@@ -118,7 +118,7 @@ void Renderer::Render(void* commandBuffer, void* mainPassDescriptor) {
     
     void* shadowEncoder = RendererBridge_BeginRenderPass(commandBuffer, m_shadowPassDescriptor.Get());
     if (shadowEncoder) {
-        m_CommonCB->Bind(shadowEncoder, nullptr, nullptr); // 빛 행렬(LightCB) 바인딩
+        m_CommonCB->Bind(shadowEncoder, nullptr, nullptr);
         m_Buddha->RenderShadow(shadowEncoder, m_depthState.Get());
         RendererBridge_EndEncoding(shadowEncoder);
     }
@@ -127,7 +127,11 @@ void Renderer::Render(void* commandBuffer, void* mainPassDescriptor) {
     if (mainEncoder) {
         m_CommonCB->Bind(mainEncoder, m_shadowTexture.Get(), m_shadowSampler.Get());
         m_Ground->Render(mainEncoder, m_depthState.Get());
-        m_Buddha->Render(mainEncoder, m_depthState.Get());
+        m_Buddha->Render(mainEncoder,
+                 m_depthState.Get(),
+                 m_Camera->GetFrustum().GetPlanes(),
+                 m_Camera->GetPosition(),
+                 m_enableNormalConeCulling);
         RendererBridge_EndEncoding(mainEncoder);
     }
 } // Render
@@ -144,6 +148,7 @@ void Renderer::OnResize(float width, float height) {
 void Renderer::OnGUI() {
     m_Camera->OnGUI();
     m_DirLight->OnGUI();
+    ImGui::Checkbox("Normal Cone Culling", &m_enableNormalConeCulling);
 } // OnGUI
 
 Renderer::ClearColor& Renderer::GetClearColor() { return m_clearColor; }

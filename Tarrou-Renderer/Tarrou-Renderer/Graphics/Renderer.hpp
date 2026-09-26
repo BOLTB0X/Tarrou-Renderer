@@ -62,6 +62,7 @@ private:
     float                                 m_globalTime = 0.0f;
     float                                 m_screenWidth = 0.0f;
     float                                 m_screenHeight = 0.0f;
+    bool                                  m_enableNormalConeCulling = true;
     
     MetalResource                         m_shadowTexture;
     MetalResource                         m_shadowPassDescriptor;

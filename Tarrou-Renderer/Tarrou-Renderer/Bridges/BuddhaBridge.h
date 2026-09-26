@@ -44,9 +44,12 @@ void BuddhaBridge_DrawMeshletsInctance(void* encoderPtr,
                                        void* meshletBuffer,
                                        void* meshletVerticesBuffer,
                                        void* meshletTrianglesBuffer,
+                                       void*  meshletBoundsBuffer,
                                        void* vertexBuffer,
                                        size_t vertexBufferOffset,
                                        void* instanceBuffer,
+                                       const simd_float4* frustumPlanes,
+                                       simd_float4 cameraPositionAndCulling,
                                        size_t meshletCount,
                                        uint32_t instanceCount);
 

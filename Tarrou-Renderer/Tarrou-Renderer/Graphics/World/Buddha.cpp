@@ -70,7 +70,11 @@ bool Buddha::Init(void* device) {
     return true;
 } // Init
  
-void Buddha::Render(void* renderCommandEncoder, void* depthState) {
+void Buddha::Render(void* renderCommandEncoder,
+                    void* depthState,
+                    const simd_float4* frustumPlanes,
+                    simd_float3 cameraPosition,
+                    bool enableNormalConeCulling) {
     if (!m_pipelineState || m_instanceCount == 0) return;
  
     int partIndex = 0;
@@ -81,9 +85,15 @@ void Buddha::Render(void* renderCommandEncoder, void* depthState) {
                                           meshletData->m_meshletBuffer.Get(),
                                           meshletData->m_meshletVerticesBuffer.Get(),
                                           meshletData->m_meshletTrianglesBuffer.Get(),
+                                          meshletData->m_meshletBoundsBuffer.Get(),
                                           m_mesh.parts[partIndex].vertexBuffer.Get(),
                                           m_mesh.parts[partIndex].vertexBufferOffset,
                                           m_instanceBuffer.Get(),
+                                          frustumPlanes,
+                                          simd_make_float4(cameraPosition.x,
+                                                           cameraPosition.y,
+                                                           cameraPosition.z,
+                                                           enableNormalConeCulling ? 1.0f : 0.0f),
                                           meshletData->m_meshlets.size(),
                                           m_instanceCount);
         partIndex++;
@@ -101,9 +111,12 @@ void Buddha::RenderShadow(void* renderCommandEncoder, void* depthState) {
                                           meshletData->m_meshletBuffer.Get(),
                                           meshletData->m_meshletVerticesBuffer.Get(),
                                           meshletData->m_meshletTrianglesBuffer.Get(),
+                                          meshletData->m_meshletBoundsBuffer.Get(),
                                           m_mesh.parts[partIndex].vertexBuffer.Get(),
                                           m_mesh.parts[partIndex].vertexBufferOffset,
                                           m_instanceBuffer.Get(),
+                                          nullptr,
+                                          simd_make_float4(0.0f, 0.0f, 0.0f, 0.0f),
                                           meshletData->m_meshlets.size(),
                                           m_instanceCount);
         partIndex++;

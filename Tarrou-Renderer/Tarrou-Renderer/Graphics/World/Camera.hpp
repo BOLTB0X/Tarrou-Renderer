@@ -9,6 +9,7 @@
 #define Camera_hpp
 
 #include <simd/simd.h>
+#include "Frustum.hpp"
 
 class Camera {
 public:
@@ -76,6 +77,7 @@ public:
     simd_float3   GetForwardVector() const;
     simd_float3   GetRightVector() const;
     simd_float3   GetUpVector() const;
+    const Frustum& GetFrustum() const;
 
 private:
     void UpdateProjection();
@@ -90,6 +92,7 @@ private:
     simd_float3   m_forward;
     simd_float3   m_right;
     simd_float3   m_upVector;
+    Frustum       m_frustum;
 
     float         m_fov, m_near, m_far, m_aspect;
     float         m_maxPitch, m_minPitch;

@@ -149,9 +149,12 @@ extern "C" void BuddhaBridge_DrawMeshletsInctance(void*    encoderPtr,
                                                   void*    meshletBuffer,
                                                   void*    meshletVerticesBuffer,
                                                   void*    meshletTrianglesBuffer,
+                                                  void*    meshletBoundsBuffer,
                                                   void*    vertexBuffer,
                                                   size_t   vertexBufferOffset,
                                                   void*    instanceBuffer,
+                                                  const simd_float4* frustumPlanes,
+                                                  simd_float4 cameraPositionAndCulling,
                                                   size_t   meshletCount,
                                                   uint32_t instanceCount) {
     id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)encoderPtr;
@@ -172,6 +175,12 @@ extern "C" void BuddhaBridge_DrawMeshletsInctance(void*    encoderPtr,
     [encoder setMeshBuffer:(__bridge id<MTLBuffer>)meshletTrianglesBuffer offset:0 atIndex:4];
     [encoder setMeshBuffer:(__bridge id<MTLBuffer>)vertexBuffer offset:vertexBufferOffset atIndex:5];
     [encoder setMeshBuffer:(__bridge id<MTLBuffer>)instanceBuffer offset:0 atIndex:6];
+    if (frustumPlanes && meshletBoundsBuffer) {
+        [encoder setObjectBytes:frustumPlanes length:sizeof(simd_float4) * 6 atIndex:1];
+        [encoder setObjectBuffer:(__bridge id<MTLBuffer>)meshletBoundsBuffer offset:0 atIndex:7];
+        [encoder setObjectBuffer:(__bridge id<MTLBuffer>)instanceBuffer offset:0 atIndex:6];
+        [encoder setObjectBytes:&cameraPositionAndCulling length:sizeof(simd_float4) atIndex:8];
+    }
      
     MTLSize threadgroupsPerGrid = MTLSizeMake(meshletCount, instanceCount, 1);
     MTLSize threadsPerObjectThreadgroup = MTLSizeMake(1, 1, 1);

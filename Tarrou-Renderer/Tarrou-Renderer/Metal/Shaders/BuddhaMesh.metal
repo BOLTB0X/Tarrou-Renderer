@@ -16,6 +16,16 @@ struct Meshlet {
     uint triangle_count;
 };
 
+struct MeshletBounds {
+    packed_float3 center;
+    float radius;
+    packed_float3 coneApex;
+    packed_float3 coneAxis;
+    float coneCutoff;
+    char coneAxisS8[3];
+    char coneCutoffS8;
+};
+
 struct VertexIn {
     packed_float3 position;
     packed_float3 normal;
@@ -51,10 +61,37 @@ float3 GetHashColor(uint id) {
 using mesh_t = mesh<VertexOut, void, 64, 124, topology::triangle>;
 
 [[object, max_total_threads_per_threadgroup(1)]]
-void BuddhaObjectOS(object_data ObjectPayload& payload [[payload]],
-                    mesh_grid_properties      outGrid,
-                    uint2                     tgid [[threadgroup_position_in_grid]])
-{
+void BuddhaObjectOS(object_data ObjectPayload&         payload [[payload]],
+                    mesh_grid_properties               outGrid,
+                    uint2                              tgid [[threadgroup_position_in_grid]],
+                    const device MeshletBounds*        meshletBounds [[buffer(7)]],
+                    const device ModelMatrixUniforms*  instances [[buffer(6)]],
+                    constant float4*                   frustumPlanes [[buffer(1)]],
+                    constant float4&                   cameraPositionAndCulling [[buffer(8)]]) {
+    MeshletBounds bounds = meshletBounds[tgid.x];
+    float4x4 modelMatrix = instances[tgid.y].ModelMatrix;
+    float3 worldCenter = (modelMatrix * float4(float3(bounds.center), 1.0)).xyz;
+    float worldRadius = bounds.radius * max(length(modelMatrix[0].xyz),
+        max(length(modelMatrix[1].xyz), length(modelMatrix[2].xyz)));
+
+    for (uint planeIndex = 0; planeIndex < 6; ++planeIndex) {
+        float4 plane = frustumPlanes[planeIndex];
+        if (dot(plane.xyz, worldCenter) + plane.w < -worldRadius) {
+            outGrid.set_threadgroups_per_grid(uint3(0, 0, 0));
+            return;
+        }
+    }
+
+    if (cameraPositionAndCulling.w > 0.5) {
+        float3 worldConeApex = (modelMatrix * float4(float3(bounds.coneApex), 1.0)).xyz;
+        float3 worldConeAxis = normalize((modelMatrix * float4(float3(bounds.coneAxis), 0.0)).xyz);
+        float3 apexToCamera = normalize(worldConeApex - cameraPositionAndCulling.xyz);
+        if (dot(apexToCamera, worldConeAxis) >= bounds.coneCutoff) {
+            outGrid.set_threadgroups_per_grid(uint3(0, 0, 0));
+            return;
+        }
+    }
+
     payload.meshletIndex  = tgid.x;
     payload.instanceIndex = tgid.y;
     outGrid.set_threadgroups_per_grid(uint3(1, 1, 1));
