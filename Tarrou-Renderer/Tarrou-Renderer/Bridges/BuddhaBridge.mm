@@ -143,6 +143,80 @@ extern "C" bool BuddhaBridge_InitMeshletsInctancePipeline(void*       devicePtr,
     }
 } // BuddhaBridge_InitMeshletsInctancePipeline
 
+extern "C" bool BuddhaBridge_InitConeDebugPipeline(void* devicePtr,
+                                                    const char* shaderSourceRaw,
+                                                    const char* vertexFunctionName,
+                                                    const char* fragmentFunctionName,
+                                                    void** outPipelineState,
+                                                    void** outDepthState) {
+    @autoreleasepool {
+        id<MTLDevice> device = (__bridge id<MTLDevice>)devicePtr;
+        NSString* shaderSource = [NSString stringWithUTF8String:shaderSourceRaw];
+        NSError* error = nil;
+        id<MTLLibrary> library = [device newLibraryWithSource:shaderSource options:nil error:&error];
+        if (!library) {
+            NSLog(@"[BuddhaBridge] Cone debug shader compile error: %@", error);
+            return false;
+        }
+
+        id<MTLFunction> vertexFunction = [library newFunctionWithName:[NSString stringWithUTF8String:vertexFunctionName]];
+        id<MTLFunction> fragmentFunction = [library newFunctionWithName:[NSString stringWithUTF8String:fragmentFunctionName]];
+        if (!vertexFunction || !fragmentFunction) return false;
+
+        MTLRenderPipelineDescriptor* descriptor = [[MTLRenderPipelineDescriptor alloc] init];
+        descriptor.label = @"NormalConeDebugPipeline";
+        descriptor.vertexFunction = vertexFunction;
+        descriptor.fragmentFunction = fragmentFunction;
+        descriptor.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+        descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+        descriptor.colorAttachments[0].blendingEnabled = YES;
+        descriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+        descriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+        descriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+        descriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+
+        id<MTLRenderPipelineState> pipeline = [device newRenderPipelineStateWithDescriptor:descriptor error:&error];
+        if (!pipeline) {
+            NSLog(@"[BuddhaBridge] Cone debug pipeline creation error: %@", error);
+            return false;
+        }
+
+        MTLDepthStencilDescriptor* depthDescriptor = [[MTLDepthStencilDescriptor alloc] init];
+        depthDescriptor.depthCompareFunction = MTLCompareFunctionGreaterEqual;
+        depthDescriptor.depthWriteEnabled = NO;
+        id<MTLDepthStencilState> depthState = [device newDepthStencilStateWithDescriptor:depthDescriptor];
+        if (!depthState) return false;
+
+        *outPipelineState = (void*)CFBridgingRetain(pipeline);
+        *outDepthState = (void*)CFBridgingRetain(depthState);
+        return true;
+    }
+}
+
+extern "C" void BuddhaBridge_DrawConeDebug(void* encoderPtr,
+                                           void* pipelineStatePtr,
+                                           void* depthStatePtr,
+                                           void* vertexBufferPtr,
+                                           uint32_t vertexStart,
+                                           uint32_t vertexCount,
+                                           void* instanceBufferPtr,
+                                           uint32_t instanceCount) {
+    id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)encoderPtr;
+    id<MTLRenderPipelineState> pipeline = (__bridge id<MTLRenderPipelineState>)pipelineStatePtr;
+    id<MTLDepthStencilState> depthState = (__bridge id<MTLDepthStencilState>)depthStatePtr;
+    if (!encoder || !pipeline || !vertexBufferPtr || !instanceBufferPtr || vertexCount == 0 || instanceCount == 0) return;
+
+    [encoder setRenderPipelineState:pipeline];
+    [encoder setDepthStencilState:depthState];
+    [encoder setCullMode:MTLCullModeNone];
+    [encoder setVertexBuffer:(__bridge id<MTLBuffer>)vertexBufferPtr offset:0 atIndex:0];
+    [encoder setVertexBuffer:(__bridge id<MTLBuffer>)instanceBufferPtr offset:0 atIndex:6];
+    [encoder drawPrimitives:MTLPrimitiveTypeLine
+                vertexStart:vertexStart
+                vertexCount:vertexCount
+              instanceCount:instanceCount];
+}
+
 extern "C" void BuddhaBridge_DrawMeshletsInctance(void*    encoderPtr,
                                                   void*    pipelineStatePtr,
                                                   void*    depthStatePtr,

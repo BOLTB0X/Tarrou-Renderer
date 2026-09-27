@@ -38,6 +38,22 @@ bool BuddhaBridge_InitMeshletsInctancePipeline(void*       devicePtr,
                                                size_t      payloadSize,
                                                void**      outPipelineState);
 
+bool BuddhaBridge_InitConeDebugPipeline(void* devicePtr,
+                                        const char* shaderSourceRaw,
+                                        const char* vertexFunctionName,
+                                        const char* fragmentFunctionName,
+                                        void** outPipelineState,
+                                        void** outDepthState);
+
+void BuddhaBridge_DrawConeDebug(void* encoderPtr,
+                                void* pipelineStatePtr,
+                                void* depthStatePtr,
+                                void* vertexBuffer,
+                                uint32_t vertexStart,
+                                uint32_t vertexCount,
+                                void* instanceBuffer,
+                                uint32_t instanceCount);
+
 void BuddhaBridge_DrawMeshletsInctance(void* encoderPtr,
                                        void* pipelineStatePtr,
                                        void* depthStatePtr,

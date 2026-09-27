@@ -131,7 +131,11 @@ void Renderer::Render(void* commandBuffer, void* mainPassDescriptor) {
                  m_depthState.Get(),
                  m_Camera->GetFrustum().GetPlanes(),
                  m_Camera->GetPosition(),
-                 m_enableNormalConeCulling);
+                 m_enableNormalConeCulling,
+                 m_debugConeCandidates,
+                 m_showNormalConeGizmos,
+                 static_cast<uint32_t>(m_coneGizmoStart),
+                 static_cast<uint32_t>(m_coneGizmoCount));
         RendererBridge_EndEncoding(mainEncoder);
     }
 } // Render
@@ -149,6 +153,16 @@ void Renderer::OnGUI() {
     m_Camera->OnGUI();
     m_DirLight->OnGUI();
     ImGui::Checkbox("Normal Cone Culling", &m_enableNormalConeCulling);
+    ImGui::Checkbox("Show Cone-Culled Meshlets", &m_debugConeCandidates);
+    ImGui::Checkbox("Show Normal Cone Gizmos", &m_showNormalConeGizmos);
+    const uint32_t totalCones = m_Buddha->GetConeDebugCount();
+    if (m_showNormalConeGizmos && totalCones > 0) {
+        const int maxCones = static_cast<int>(totalCones);
+        m_coneGizmoCount = std::clamp(m_coneGizmoCount, 1, maxCones);
+        m_coneGizmoStart = std::clamp(m_coneGizmoStart, 0, maxCones - m_coneGizmoCount);
+        ImGui::SliderInt("Cone Start", &m_coneGizmoStart, 0, maxCones - m_coneGizmoCount);
+        ImGui::SliderInt("Cone Count", &m_coneGizmoCount, 1, maxCones);
+    }
 } // OnGUI
 
 Renderer::ClearColor& Renderer::GetClearColor() { return m_clearColor; }
