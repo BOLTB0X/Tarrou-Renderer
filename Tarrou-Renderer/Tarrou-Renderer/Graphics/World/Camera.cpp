@@ -96,6 +96,8 @@ void Camera::Update() {
     m_viewMatrix = MatrixLookAtLH(m_position, lookAt, m_upVector);
     
     UpdateProjection();
+    m_frustum.Update(m_position, m_forward, m_right, m_upVector,
+                     ToRadians(m_fov), m_aspect, m_near, m_far);
 } // Update
 
 void Camera::Reset() {
@@ -135,6 +137,7 @@ float         Camera::GetAspect() const { return m_aspect; }
 simd_float3   Camera::GetForwardVector() const { return m_forward; }
 simd_float3   Camera::GetRightVector() const { return m_right; }
 simd_float3   Camera::GetUpVector() const { return m_upVector; }
+const Frustum& Camera::GetFrustum() const { return m_frustum; }
 
 void Camera::OnGUI() {
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.1f, 0.1f, 1.0f));

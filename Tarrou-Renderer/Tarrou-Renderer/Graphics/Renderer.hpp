@@ -62,6 +62,11 @@ private:
     float                                 m_globalTime = 0.0f;
     float                                 m_screenWidth = 0.0f;
     float                                 m_screenHeight = 0.0f;
+    bool                                  m_enableNormalConeCulling = true;
+    bool                                  m_debugConeCandidates = false;
+    bool                                  m_showNormalConeGizmos = false;
+    int                                   m_coneGizmoStart = 0;
+    int                                   m_coneGizmoCount = 32;
     
     MetalResource                         m_shadowTexture;
     MetalResource                         m_shadowPassDescriptor;

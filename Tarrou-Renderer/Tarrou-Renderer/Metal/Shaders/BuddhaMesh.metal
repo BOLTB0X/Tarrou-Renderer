@@ -16,6 +16,16 @@ struct Meshlet {
     uint triangle_count;
 };
 
+struct MeshletBounds {
+    packed_float3 center;
+    float radius;
+    packed_float3 coneApex;
+    packed_float3 coneAxis;
+    float coneCutoff;
+    char coneAxisS8[3];
+    char coneCutoffS8;
+};
+
 struct VertexIn {
     packed_float3 position;
     packed_float3 normal;
@@ -34,6 +44,7 @@ struct ModelMatrixUniforms {
 struct ObjectPayload {
     uint meshletIndex;
     uint instanceIndex;
+    uint coneCulledCandidate;
 }; // ObjectPayload
 
 float3 GetHashColor(uint id) {
@@ -51,12 +62,44 @@ float3 GetHashColor(uint id) {
 using mesh_t = mesh<VertexOut, void, 64, 124, topology::triangle>;
 
 [[object, max_total_threads_per_threadgroup(1)]]
-void BuddhaObjectOS(object_data ObjectPayload& payload [[payload]],
-                    mesh_grid_properties      outGrid,
-                    uint2                     tgid [[threadgroup_position_in_grid]])
-{
+void BuddhaObjectOS(object_data ObjectPayload&         payload [[payload]],
+                    mesh_grid_properties               outGrid,
+                    uint2                              tgid [[threadgroup_position_in_grid]],
+                    const device MeshletBounds*        meshletBounds [[buffer(7)]],
+                    const device ModelMatrixUniforms*  instances [[buffer(6)]],
+                    constant float4*                   frustumPlanes [[buffer(1)]],
+                    constant float4&                   cameraPositionAndCulling [[buffer(8)]]) {
+    MeshletBounds bounds = meshletBounds[tgid.x];
+    float4x4 modelMatrix = instances[tgid.y].ModelMatrix;
+    float3 worldCenter = (modelMatrix * float4(float3(bounds.center), 1.0)).xyz;
+    float worldRadius = bounds.radius * max(length(modelMatrix[0].xyz),
+        max(length(modelMatrix[1].xyz), length(modelMatrix[2].xyz)));
+
+    for (uint planeIndex = 0; planeIndex < 6; ++planeIndex) {
+        float4 plane = frustumPlanes[planeIndex];
+        if (dot(plane.xyz, worldCenter) + plane.w < -worldRadius) {
+            outGrid.set_threadgroups_per_grid(uint3(0, 0, 0));
+            return;
+        }
+    }
+
+    bool coneCulledCandidate = false;
+    if (cameraPositionAndCulling.w > 0.5) {
+        float3 worldConeApex = (modelMatrix * float4(float3(bounds.coneApex), 1.0)).xyz;
+        float3 worldConeAxis = normalize((modelMatrix * float4(float3(bounds.coneAxis), 0.0)).xyz);
+        float3 apexToCamera = normalize(worldConeApex - cameraPositionAndCulling.xyz);
+        coneCulledCandidate = dot(apexToCamera, worldConeAxis) >= bounds.coneCutoff;
+        bool cullingEnabled = fmod(cameraPositionAndCulling.w, 2.0) >= 1.0;
+        bool debugCandidates = cameraPositionAndCulling.w >= 2.0;
+        if (coneCulledCandidate && cullingEnabled && !debugCandidates) {
+            outGrid.set_threadgroups_per_grid(uint3(0, 0, 0));
+            return;
+        }
+    }
+
     payload.meshletIndex  = tgid.x;
     payload.instanceIndex = tgid.y;
+    payload.coneCulledCandidate = coneCulledCandidate ? 1 : 0;
     outGrid.set_threadgroups_per_grid(uint3(1, 1, 1));
 } // BuddhaObjectOS
 
@@ -78,7 +121,9 @@ void BuddhaMeshMS(mesh_t                            output,
     float4x4 modelMatrix = instances[instanceIdx].ModelMatrix;
 
     if (tid == 0) output.set_primitive_count(m.triangle_count);
-    float3 m_color = GetHashColor(meshletIdx);
+    float3 m_color = payload.coneCulledCandidate != 0
+        ? float3(1.0, 0.04, 0.02)
+        : GetHashColor(meshletIdx);
 
     if (tid < m.vertex_count) {
         uint v_idx = meshlet_vertices[m.vertex_offset + tid];
@@ -109,3 +154,26 @@ float4 BuddhaMeshPS(VertexOut                    in [[stage_in]],
 
     return float4(in.meshletColor * light, 1.0);
 } // BuddhaMeshPS
+
+struct ConeDebugVertexIn {
+    packed_float3 position;
+};
+
+struct ConeDebugVertexOut {
+    float4 position [[position]];
+};
+
+vertex ConeDebugVertexOut BuddhaConeDebugVS(const device ConeDebugVertexIn* vertices [[buffer(0)]],
+                                            constant FrameCB& frameData [[buffer(1)]],
+                                            const device ModelMatrixUniforms* instances [[buffer(6)]],
+                                            uint vertexID [[vertex_id]],
+                                            uint instanceID [[instance_id]]) {
+    ConeDebugVertexOut out;
+    float4 worldPosition = instances[instanceID].ModelMatrix * float4(float3(vertices[vertexID].position), 1.0);
+    out.position = frameData.projection * frameData.view * worldPosition;
+    return out;
+}
+
+fragment float4 BuddhaConeDebugPS() {
+    return float4(1.0, 0.12, 0.04, 0.8);
+}

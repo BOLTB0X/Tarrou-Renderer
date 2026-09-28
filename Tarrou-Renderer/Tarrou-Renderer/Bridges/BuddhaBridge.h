@@ -38,15 +38,34 @@ bool BuddhaBridge_InitMeshletsInctancePipeline(void*       devicePtr,
                                                size_t      payloadSize,
                                                void**      outPipelineState);
 
+bool BuddhaBridge_InitConeDebugPipeline(void* devicePtr,
+                                        const char* shaderSourceRaw,
+                                        const char* vertexFunctionName,
+                                        const char* fragmentFunctionName,
+                                        void** outPipelineState,
+                                        void** outDepthState);
+
+void BuddhaBridge_DrawConeDebug(void* encoderPtr,
+                                void* pipelineStatePtr,
+                                void* depthStatePtr,
+                                void* vertexBuffer,
+                                uint32_t vertexStart,
+                                uint32_t vertexCount,
+                                void* instanceBuffer,
+                                uint32_t instanceCount);
+
 void BuddhaBridge_DrawMeshletsInctance(void* encoderPtr,
                                        void* pipelineStatePtr,
                                        void* depthStatePtr,
                                        void* meshletBuffer,
                                        void* meshletVerticesBuffer,
                                        void* meshletTrianglesBuffer,
+                                       void*  meshletBoundsBuffer,
                                        void* vertexBuffer,
                                        size_t vertexBufferOffset,
                                        void* instanceBuffer,
+                                       const simd_float4* frustumPlanes,
+                                       simd_float4 cameraPositionAndCulling,
                                        size_t meshletCount,
                                        uint32_t instanceCount);
 
