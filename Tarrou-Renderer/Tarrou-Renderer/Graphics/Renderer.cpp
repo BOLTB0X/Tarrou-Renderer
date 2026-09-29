@@ -127,9 +127,15 @@ void Renderer::Render(void* commandBuffer, void* mainPassDescriptor) {
     if (mainEncoder) {
         m_CommonCB->Bind(mainEncoder, m_shadowTexture.Get(), m_shadowSampler.Get());
         m_Ground->Render(mainEncoder, m_depthState.Get());
+        // Zero-normal planes keep all meshlets alive while preserving the
+        // independent normal-cone test. This makes frustum culling testable.
+        const simd_float4 noFrustumPlanes[6] = {};
+        const simd_float4* frustumPlanes = m_enableFrustumCulling
+            ? m_Camera->GetFrustum().GetPlanes()
+            : noFrustumPlanes;
         m_Buddha->Render(mainEncoder,
                  m_depthState.Get(),
-                 m_Camera->GetFrustum().GetPlanes(),
+                 frustumPlanes,
                  m_Camera->GetPosition(),
                  m_enableNormalConeCulling,
                  m_debugConeCandidates,
@@ -152,6 +158,7 @@ void Renderer::OnResize(float width, float height) {
 void Renderer::OnGUI() {
     m_Camera->OnGUI();
     m_DirLight->OnGUI();
+    ImGui::Checkbox("Frustum Culling", &m_enableFrustumCulling);
     ImGui::Checkbox("Normal Cone Culling", &m_enableNormalConeCulling);
     ImGui::Checkbox("Show Cone-Culled Meshlets", &m_debugConeCandidates);
     ImGui::Checkbox("Show Normal Cone Gizmos", &m_showNormalConeGizmos);
@@ -167,4 +174,3 @@ void Renderer::OnGUI() {
 
 Renderer::ClearColor& Renderer::GetClearColor() { return m_clearColor; }
 void                  Renderer::SetClearColor(float r, float g, float b, float a) { m_clearColor = ClearColor(r, g, b, a); }
-

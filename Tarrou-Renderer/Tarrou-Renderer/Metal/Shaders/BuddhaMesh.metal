@@ -85,10 +85,15 @@ void BuddhaObjectOS(object_data ObjectPayload&         payload [[payload]],
 
     bool coneCulledCandidate = false;
     if (cameraPositionAndCulling.w > 0.5) {
-        float3 worldConeApex = (modelMatrix * float4(float3(bounds.coneApex), 1.0)).xyz;
         float3 worldConeAxis = normalize((modelMatrix * float4(float3(bounds.coneAxis), 0.0)).xyz);
-        float3 apexToCamera = normalize(worldConeApex - cameraPositionAndCulling.xyz);
-        coneCulledCandidate = dot(apexToCamera, worldConeAxis) >= bounds.coneCutoff;
+        float3 centerToCamera = worldCenter - cameraPositionAndCulling.xyz;
+        float centerDistance = length(centerToCamera);
+        float coneCutoff = bounds.coneCutoff;
+        if (centerDistance > 1e-5 && isfinite(centerDistance) &&
+            isfinite(coneCutoff) && coneCutoff >= 0.0 && coneCutoff < 1.0) {
+            coneCulledCandidate = dot(centerToCamera, worldConeAxis) >=
+                coneCutoff * centerDistance + worldRadius;
+        }
         bool cullingEnabled = fmod(cameraPositionAndCulling.w, 2.0) >= 1.0;
         bool debugCandidates = cameraPositionAndCulling.w >= 2.0;
         if (coneCulledCandidate && cullingEnabled && !debugCandidates) {

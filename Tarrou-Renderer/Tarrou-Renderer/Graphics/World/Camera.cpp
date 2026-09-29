@@ -104,7 +104,7 @@ void Camera::Reset() {
     m_position = DEFAULT_POSITION;
     m_rotation = DEFAULT_ROTATION;
     m_fov = DEFAULT_FOV;
-    UpdateProjection();
+    Update();
 } // Reset
 
 void          Camera::AddRotation(float pitch, float yaw) { AddPitch(pitch); AddYaw(yaw); }
@@ -116,14 +116,14 @@ void          Camera::MoveLeftRight(float distance) { m_position += GetRightVect
 void          Camera::MoveUpDown(float distance) { m_position += GetUpVector() * distance; }
 
 // Setters
-void          Camera::SetPosition(const simd_float3& pos) { m_position = pos; }
-void          Camera::SetPosition(float x, float y, float z) { m_position = simd_make_float3(x, y, z); }
-void          Camera::SetRotation(const simd_float3& rot) { m_rotation = rot; }
-void          Camera::SetRotation(float x, float y, float z) { m_rotation = simd_make_float3(x, y, z); }
-void          Camera::SetFov(float fov) { m_fov = fov; UpdateProjection(); }
-void          Camera::SetAspect(float aspect) { m_aspect = aspect; UpdateProjection(); }
-void          Camera::SetNear(float screenNear) { m_near = screenNear; UpdateProjection(); }
-void          Camera::SetFar(float screenFar) { m_far = screenFar; UpdateProjection(); }
+void          Camera::SetPosition(const simd_float3& pos) { m_position = pos; Update(); }
+void          Camera::SetPosition(float x, float y, float z) { m_position = simd_make_float3(x, y, z); Update(); }
+void          Camera::SetRotation(const simd_float3& rot) { m_rotation = rot; Update(); }
+void          Camera::SetRotation(float x, float y, float z) { m_rotation = simd_make_float3(x, y, z); Update(); }
+void          Camera::SetFov(float fov) { m_fov = fov; Update(); }
+void          Camera::SetAspect(float aspect) { m_aspect = aspect; Update(); }
+void          Camera::SetNear(float screenNear) { m_near = screenNear; Update(); }
+void          Camera::SetFar(float screenFar) { m_far = screenFar; Update(); }
 // Getters
 simd_float3   Camera::GetPosition() const { return m_position; }
 simd_float3   Camera::GetRotation() const { return m_rotation; }
