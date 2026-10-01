@@ -264,4 +264,3 @@ extern "C" void BuddhaBridge_DrawMeshletsInctance(void*    encoderPtr,
         threadsPerObjectThreadgroup:threadsPerObjectThreadgroup
         threadsPerMeshThreadgroup:threadsPerMeshThreadgroup];
 } // BuddhaBridge_DrawMeshletsInctance
-
