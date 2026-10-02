@@ -3,10 +3,8 @@
 <div align="center">
   <img src="https://github.com/BOLTB0X/Metal-API/blob/main/img/Tarrou/%EB%A9%94%EC%89%AC%EB%A0%9B03_PCF02.png?raw=true" width="500" style="border:1px solid #ddd; border-radius:4px;" />
   <br>
-  <p><strong>PCF Shadow</strong></p>
+  <p><strong>Apple Metal 기반의 IncetenceMeshlet 렌더러</strong></p>
 </div>
-
-**Apple Metal 기반의 Meshlet 렌더러**
 
 ## Stack
 
